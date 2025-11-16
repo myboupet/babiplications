@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Babibliations - Aprends les tables facilement !</title>
+<link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <img src="logo.png" alt="Logo" class="logo">
+
+  <!-- Fenêtre de démarrage -->
+  <div id="startScreen" class="overlay">
+    <div class="overlay-box">
+      <h1>Es-tu prêt ?</h1>
+      <button id="playBtn">Play</button>
+    </div>
+  </div>
+
+  <div class="game" hidden>
+    <h1>Tables de multiplication</h1>
+
+    <!-- Barre de progression timer -->
+    <div class="timer-bar">
+      <div id="progress" class="progress"></div>
+    </div>
+
+    <div id="question" class="question">3 × 4 = ?</div>
+    <input id="answer" type="number" placeholder="Ta réponse" />
+    <button id="submit">Valider</button>
+    <div id="feedback" class="feedback"></div>
+    <div id="score">Score: 0</div>
+    <button id="retry">Rejouer</button>
+  </div>
+
+  <!-- Musique de fond -->
+  <audio id="bgMusic" src="music.mp3"></audio>
+  <!-- Effets sonores -->
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
