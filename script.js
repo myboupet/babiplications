@@ -27,7 +27,39 @@ function updateStats() {
   document.getElementById("streak").textContent = currentStreak;
   document.getElementById("gems").textContent = gems;
 }
+window.addEventListener("DOMContentLoaded", () => {
+  // Récupérer les valeurs sauvegardées
+  currentStreak = parseInt(localStorage.getItem("streak")) || 0;
+  gems = parseInt(localStorage.getItem("gems")) || 0;
 
+  // Mettre à jour l'affichage
+  updateStats();
+});
+function checkStreakRachat() {
+  const today = new Date().toDateString();
+  const lastPlayedDate = localStorage.getItem("lastPlayedDate");
+  
+  if (lastPlayedDate) {
+    const diffDays = Math.floor(
+      (new Date(today) - new Date(lastPlayedDate)) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays > 1) {
+      // Jour(s) manqué(s)
+      if (gems >= 19) {
+        // Proposer un rachat
+        gems -= 19;
+        localStorage.setItem("gems", gems);
+        // La série continue malgré le jour manqué
+      } else {
+        // Pas assez de gemmes → série perdue
+        currentStreak = 0;
+      }
+    }
+  }
+
+  localStorage.setItem("lastPlayedDate", today);
+}
 // Animation visuelle
 function animateBox(id) {
   const box = document.getElementById(id);
@@ -47,18 +79,8 @@ function endOfDay(score) {
     currentStreak++;
     animateBox("streakBox");
   } else {
-    // Partie ratée → possibilité de rachat avec les gemmes déjà gagnées
-    if (gems >= 19) {
-      if (confirm("Tu as raté. Dépenser 19 gemmes pour racheter ?")) {
-        gems -= 19;
-        animateBox("gemsBox");
-      } else {
-        currentStreak = 0;
-      }
-    } else {
-      currentStreak = 0;
-    }
-  }
+    
+}
 
   // Mise à jour de la date et sauvegarde
   lastPlayedDate = today;
@@ -207,6 +229,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
