@@ -63,7 +63,7 @@ function animateBox(id) {
 
 // Fin de partie
 function endOfDay(score) {
-  const today = new Date().toDateString();
+  const today = new Date().toISOString().split("T")[0];
 
   // Empêche de rejouer plusieurs fois dans la même journée
   if (lastPlayedDate === today) return;
@@ -223,6 +223,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
