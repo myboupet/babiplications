@@ -14,13 +14,46 @@ const bgMusic = document.getElementById("bgMusic");
 const correctSound = document.getElementById("correctSound");
 const wrongSound = document.getElementById("wrongSound");
 
+const paramBtn = document.getElementById("paramBtn");
+const paramModal = document.getElementById("paramModal");
+const saveTablesBtn = document.getElementById("saveTables");
+const tablesForm = document.getElementById("tablesForm");
+
+paramBtn.addEventListener("click", () => {
+  // Ajoute la classe spin
+  paramBtn.classList.add("spin");
+
+  // Retire la classe après l’animation pour pouvoir relancer plus tard
+  setTimeout(() => {
+    paramBtn.classList.remove("spin");
+    // Ici tu peux aussi ouvrir la fenêtre des paramètres
+    paramModal.style.display = "flex";
+  }, 1000); // durée de l’animation
+});
+let selectedTables = Array.from({length:12}, (_,i)=>i+1);
+
+// Quand on clique sur l’icône paramètre → ouvrir la fenêtre
+paramBtn.addEventListener("click", () => {
+  paramModal.style.display = "flex"; // affiche la modale
+});
+saveTablesBtn.addEventListener("click", () => {
+  const checked = [...tablesForm.querySelectorAll("input[type=checkbox]:checked")]
+    .map(cb => parseInt(cb.value));
+  selectedTables = checked.length ? checked : [1];
+
+  // FERMER la fenêtre
+  paramModal.style.display = "none";   // ← utilise style.display au lieu de hidden
+  startGame();                         // lance le jeu
+});
+
+
 let score = 0;
 let a, b;
 let timeLeft = 40;
 let timerId;
 
 function newQuestion() {
-  a = Math.floor(Math.random() * 12) + 1;
+  a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
   b = Math.floor(Math.random() * 12) + 1;
   questionEl.textContent = `${a} × ${b} = ?`;
   answerEl.value = "";
