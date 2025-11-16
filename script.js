@@ -36,25 +36,24 @@ window.addEventListener("DOMContentLoaded", () => {
   updateStats();
 });
 function checkStreakRachat() {
-  const today = new Date().toDateString();
+  const today = new Date().toISOString().split("T")[0]; 
+// Exemple : "2025-11-16"
   const storedLastPlayedDate = localStorage.getItem("lastPlayedDate"); // ← renommée
-
-  if (storedLastPlayedDate) {
+const storedLastPlayedDate = localStorage.getItem("lastPlayedDate");
+if (storedLastPlayedDate) {
     const diffDays = Math.floor(
-      (new Date(today) - new Date(storedLastPlayedDate)) / (1000 * 60 * 60 * 24)
+        (new Date(today) - new Date(storedLastPlayedDate)) / (1000 * 60 * 60 * 24)
     );
-
     if (diffDays > 1) {
-      if (gems >= 19) {
-        gems -= 19;
-        localStorage.setItem("gems", gems);
-      } else {
-        currentStreak = 0;
-      }
+        if (gems >= 19) {
+            gems -= 19;
+            localStorage.setItem("gems", gems);
+        } else {
+            currentStreak = 0;
+        }
     }
-  }
-
-  localStorage.setItem("lastPlayedDate", today);
+}
+localStorage.setItem("lastPlayedDate", today);
 }
 // Animation visuelle
 function animateBox(id) {
@@ -225,6 +224,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
