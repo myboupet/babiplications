@@ -16,6 +16,41 @@ input, button {
   box-sizing: border-box;
 }
 
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 15px 0;
+}
+
+.stat-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.1);
+  padding: 10px 15px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #0ff;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.stat-icon {
+  height: 30px;
+  margin-right: 8px;
+}
+
+/* Sur mobile : cases plus larges */
+@media (max-width: 480px) {
+  .stats {
+    flex-direction: column;
+    align-items: center;
+  }
+  .stat-box {
+    width: 80%;
+    justify-content: center;
+  }
+}
+
 /* La boîte du jeu s’adapte */
 .game {
   width: 95%;
@@ -171,3 +206,4 @@ button {
   background: #0ff;
   color: #000;
 }
+
