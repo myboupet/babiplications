@@ -69,14 +69,10 @@ function endOfDay(score) {
   localStorage.setItem("gems", gems);
   localStorage.setItem("lastPlayedDate", lastPlayedDate);
 
-  updateStats();
+  updateStats()
+  
 }
 
-  // sauvegarde
-  localStorage.setItem("streak", currentStreak);
-  localStorage.setItem("gems", gems);
-  localStorage.setItem("lastPlayedDate", lastPlayedDate);
-}
 function updateUI() {
   document.getElementById("streak").textContent = `Série : ${currentStreak}`;
   document.getElementById("gems").textContent = `Gemmes : ${gems}`;
@@ -206,5 +202,6 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
