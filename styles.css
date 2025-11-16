@@ -10,6 +10,70 @@ body {
   align-items: center;
 }
 
+/* Sur mobile, boutons et inputs prennent toute la largeur */
+input, button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* La boîte du jeu s’adapte */
+.game {
+  width: 95%;
+  max-width: 500px;
+}
+
+/* Ajustements pour petits écrans */
+@media (max-width: 480px) {
+  h1 { font-size: 1.4rem; }
+  .question { font-size: 1.6rem; }
+  .param-btn { height: 35px; }
+}
+
+.param-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  height: 40px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+/* Classe qui déclenche la rotation */
+.spin {
+  animation: rotate 1s ease forwards;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 90%;
+  width: 400px;
+  color: #fff;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
+}
+
 /* Effet lumineux vert/rouge autour du bloc de jeu */
 .game.flash-green {
   box-shadow: 0 0 30px #0f0, 0 0 60px #0f0;
