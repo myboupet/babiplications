@@ -19,6 +19,46 @@ const paramModal = document.getElementById("paramModal");
 const saveTablesBtn = document.getElementById("saveTables");
 const tablesForm = document.getElementById("tablesForm");
 
+let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
+let gems = parseInt(localStorage.getItem("gems")) || 0;
+let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
+function endOfDay(score) {
+  const today = new Date().toDateString();
+
+  if (lastPlayedDate === today) {
+    // déjà joué aujourd'hui → rien à faire
+    return;
+  }
+
+  if (score >= 90) {
+    currentStreak++;
+    gems += 1; // 1 gemme par point de série
+  } else {
+    // joueur a raté → proposer rachat
+    if (gems >= 10) {
+      if (confirm("Tu as raté aujourd'hui. Dépenser 10 gemmes pour racheter ?")) {
+        gems -= 10;
+        // streak continue
+      } else {
+        currentStreak = 0; // série perdue
+      }
+    } else {
+      currentStreak = 0; // pas assez de gemmes
+    }
+  }
+
+  lastPlayedDate = today;
+
+  // sauvegarde
+  localStorage.setItem("streak", currentStreak);
+  localStorage.setItem("gems", gems);
+  localStorage.setItem("lastPlayedDate", lastPlayedDate);
+}
+function updateUI() {
+  document.getElementById("streak").textContent = `Série : ${currentStreak}`;
+  document.getElementById("gems").textContent = `Gemmes : ${gems}`;
+}
+
 paramBtn.addEventListener("click", () => {
   // Ajoute la classe spin
   paramBtn.classList.add("spin");
@@ -143,3 +183,4 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
