@@ -22,32 +22,55 @@ const tablesForm = document.getElementById("tablesForm");
 let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
 let gems = parseInt(localStorage.getItem("gems")) || 0;
 let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
+
+function updateStats() {
+  document.getElementById("streak").textContent = currentStreak;
+  document.getElementById("gems").textContent = gems;
+}
+
+// Animation visuelle
+function animateBox(id) {
+  const box = document.getElementById(id);
+  box.classList.add("animate");
+  setTimeout(() => box.classList.remove("animate"), 600);
+}
+
+// Fin de partie
 function endOfDay(score) {
   const today = new Date().toDateString();
 
-  if (lastPlayedDate === today) {
-    // déjà joué aujourd'hui → rien à faire
-    return;
-  }
+  if (lastPlayedDate === today) return; // déjà joué
 
   if (score >= 90) {
     currentStreak++;
-    gems += 1; // 1 gemme par point de série
+    animateBox("streakBox");
+
+    // 1 gemme tous les 50 points
+    const gained = Math.floor(score / 50);
+    gems += gained;
+    if (gained > 0) animateBox("gemsBox");
   } else {
-    // joueur a raté → proposer rachat
-    if (gems >= 10) {
-      if (confirm("Tu as raté aujourd'hui. Dépenser 10 gemmes pour racheter ?")) {
-        gems -= 10;
-        // streak continue
+    // série ratée
+    if (gems >= 19) {
+      if (confirm("Tu as raté. Dépenser 19 gemmes pour racheter ?")) {
+        gems -= 19;
+        animateBox("gemsBox");
       } else {
-        currentStreak = 0; // série perdue
+        currentStreak = 0;
       }
     } else {
-      currentStreak = 0; // pas assez de gemmes
+      currentStreak = 0;
     }
   }
 
   lastPlayedDate = today;
+
+  localStorage.setItem("streak", currentStreak);
+  localStorage.setItem("gems", gems);
+  localStorage.setItem("lastPlayedDate", lastPlayedDate);
+
+  updateStats();
+}
 
   // sauvegarde
   localStorage.setItem("streak", currentStreak);
@@ -183,4 +206,5 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
