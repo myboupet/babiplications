@@ -37,22 +37,18 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 function checkStreakRachat() {
   const today = new Date().toDateString();
-  const lastPlayedDate = localStorage.getItem("lastPlayedDate");
-  
-  if (lastPlayedDate) {
+  const storedLastPlayedDate = localStorage.getItem("lastPlayedDate"); // ← renommée
+
+  if (storedLastPlayedDate) {
     const diffDays = Math.floor(
-      (new Date(today) - new Date(lastPlayedDate)) / (1000 * 60 * 60 * 24)
+      (new Date(today) - new Date(storedLastPlayedDate)) / (1000 * 60 * 60 * 24)
     );
 
     if (diffDays > 1) {
-      // Jour(s) manqué(s)
       if (gems >= 19) {
-        // Proposer un rachat
         gems -= 19;
         localStorage.setItem("gems", gems);
-        // La série continue malgré le jour manqué
       } else {
-        // Pas assez de gemmes → série perdue
         currentStreak = 0;
       }
     }
@@ -229,6 +225,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
