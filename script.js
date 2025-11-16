@@ -39,18 +39,15 @@ function animateBox(id) {
 function endOfDay(score) {
   const today = new Date().toDateString();
 
-  if (lastPlayedDate === today) return; // déjà joué
+  // Empêche de rejouer plusieurs fois dans la même journée
+  if (lastPlayedDate === today) return;
 
   if (score >= 90) {
+    // Partie réussie → on augmente la série
     currentStreak++;
     animateBox("streakBox");
-
-    // 1 gemme tous les 50 points
-    const gained = Math.floor(score / 50);
-    gems += gained;
-    if (gained > 0) animateBox("gemsBox");
   } else {
-    // série ratée
+    // Partie ratée → possibilité de rachat avec les gemmes déjà gagnées
     if (gems >= 19) {
       if (confirm("Tu as raté. Dépenser 19 gemmes pour racheter ?")) {
         gems -= 19;
@@ -63,14 +60,13 @@ function endOfDay(score) {
     }
   }
 
+  // Mise à jour de la date et sauvegarde
   lastPlayedDate = today;
-
   localStorage.setItem("streak", currentStreak);
   localStorage.setItem("gems", gems);
   localStorage.setItem("lastPlayedDate", lastPlayedDate);
 
-  updateStats()
-  
+  updateStats();
 }
 
 function updateUI() {
@@ -118,23 +114,33 @@ function newQuestion() {
   answerEl.value = "";
 }
 
+let score = 0;
+let previousScore = 0; // garde en mémoire le score avant la réponse
+
 function checkAnswer() {
   const val = parseInt(answerEl.value, 10);
   if (val === a * b) {
-    score += 10;
+    previousScore = score;       // sauvegarde l’ancien score
+    score += 10;                 // ajoute les points
     feedbackEl.textContent = "Bravo !";
     feedbackEl.className = "feedback correct";
     correctSound.play();
 
+    // Vérifie si on a franchi un palier de 50
+    if (Math.floor(score / 50) > Math.floor(previousScore / 50)) {
+      gems += 1; // ajoute 1 gemme
+      animateBox("gemsBox");
+      localStorage.setItem("gems", gems);
+      updateStats();
+    }
+
     gameDiv.classList.add("flash-green");
     setTimeout(() => gameDiv.classList.remove("flash-green"), 1000);
-
   } else {
     score = Math.max(0, score - 5);
     feedbackEl.textContent = `Raté… c'était ${a*b}`;
     feedbackEl.className = "feedback wrong";
     wrongSound.play();
-
     gameDiv.classList.add("flash-red");
     setTimeout(() => gameDiv.classList.remove("flash-red"), 1000);
   }
@@ -202,6 +208,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
