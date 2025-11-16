@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Babibliations - Aprends les tables facilement !</title>
 <link rel="icon" type="image/x-icon" href="favicon.png">
   <link rel="stylesheet" href="styles.css">
@@ -17,7 +18,34 @@
     </div>
   </div>
 
-  <div class="game" hidden>
+  <!-- Bouton paramètres -->
+<img src="param.png" alt="Paramètres" id="paramBtn" class="param-btn">
+
+<!-- Fenêtre modale -->
+<div id="paramModal" class="modal" hidden>
+  <div class="modal-content">
+    <h2>Choisis tes tables</h2>
+    <form id="tablesForm">
+      <div class="checkbox-grid">
+        <label><input type="checkbox" value="1" checked> Table de 1</label>
+        <label><input type="checkbox" value="2" checked> Table de 2</label>
+        <label><input type="checkbox" value="3" checked> Table de 3</label>
+        <label><input type="checkbox" value="4" checked> Table de 4</label>
+        <label><input type="checkbox" value="5" checked> Table de 5</label>
+        <label><input type="checkbox" value="6" checked> Table de 6</label>
+        <label><input type="checkbox" value="7" checked> Table de 7</label>
+        <label><input type="checkbox" value="8" checked> Table de 8</label>
+        <label><input type="checkbox" value="9" checked> Table de 9</label>
+        <label><input type="checkbox" value="10" checked> Table de 10</label>
+        <label><input type="checkbox" value="11" checked> Table de 11</label>
+        <label><input type="checkbox" value="12" checked> Table de 12</label>
+      </div>
+      <button type="button" id="saveTables">Valider</button>
+    </form>
+  </div>
+</div>
+
+    <div class="game" hidden>
     <h1>Tables de multiplication</h1>
 
     <!-- Barre de progression timer -->
