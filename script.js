@@ -39,7 +39,6 @@ function checkStreakRachat() {
   const today = new Date().toISOString().split("T")[0]; 
 // Exemple : "2025-11-16"
   const storedLastPlayedDate = localStorage.getItem("lastPlayedDate"); // ← renommée
-const storedLastPlayedDate = localStorage.getItem("lastPlayedDate");
 if (storedLastPlayedDate) {
     const diffDays = Math.floor(
         (new Date(today) - new Date(storedLastPlayedDate)) / (1000 * 60 * 60 * 24)
@@ -224,6 +223,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
