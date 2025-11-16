@@ -114,7 +114,6 @@ function newQuestion() {
   answerEl.value = "";
 }
 
-let score = 0;
 let previousScore = 0; // garde en mémoire le score avant la réponse
 
 function checkAnswer() {
@@ -208,6 +207,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
