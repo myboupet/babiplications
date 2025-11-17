@@ -31,11 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const today = new Date().toDateString();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-}
-
-let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
-let gems = parseInt(localStorage.getItem("gems")) || 0;
-let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
+});
 
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
@@ -85,12 +81,6 @@ function endOfDay(score) {
   updateStats();
 }
 
-
-  localStorage.setItem("streak", currentStreak);
-  localStorage.setItem("lastPlayedDate", today);
-
-  updateStats();
-});
 function checkStreakRachat() {
   const today = new Date().toISOString().split("T")[0]; 
 // Exemple : "2025-11-16"
@@ -279,6 +269,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
