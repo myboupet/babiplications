@@ -31,16 +31,60 @@ window.addEventListener("DOMContentLoaded", () => {
   const today = new Date().toDateString();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
+}
+
+let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
+let gems = parseInt(localStorage.getItem("gems")) || 0;
+let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
+
+function checkStreak() {
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
 
   if (lastPlayedDate) {
-    if (lastPlayedDate === yesterday.toDateString()) {
-      currentStreak++;
+    if (lastPlayedDate === yesterdayStr) {
+      // OK, série continue
     } else if (lastPlayedDate !== today) {
-      currentStreak = 1;
+      // Jour manqué → payer ou perdre
+      if (gems >= 19) {
+        gems -= 19; // payer pour sauver
+        localStorage.setItem("gems", gems);
+      } else {
+        currentStreak = 0; // série perdue
+      }
     }
   } else {
-    currentStreak = 1;
+    currentStreak = 0; // première fois
   }
+
+  localStorage.setItem("streak", currentStreak);
+  localStorage.setItem("lastPlayedDate", today);
+  updateStats();
+}
+
+function endOfDay(score) {
+  const today = new Date().toISOString().split("T")[0];
+
+  // Si déjà joué aujourd’hui → ne rien faire
+  if (lastPlayedDate === today) return;
+
+  // Le joueur peut rejouer autant qu’il veut, mais la série monte
+  // seulement si une partie ≥ 90 est réussie
+  if (score >= 90) {
+    currentStreak++;
+    animateBox("streakBox");
+  }
+
+  lastPlayedDate = today;
+  localStorage.setItem("streak", currentStreak);
+  localStorage.setItem("gems", gems);
+  localStorage.setItem("lastPlayedDate", lastPlayedDate);
+
+  updateStats();
+}
+
 
   localStorage.setItem("streak", currentStreak);
   localStorage.setItem("lastPlayedDate", today);
@@ -235,6 +279,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
