@@ -38,6 +38,12 @@ function checkStreak() {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
+function checkStreak() {
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+
   if (lastPlayedDate) {
     if (lastPlayedDate === yesterdayStr) {
       // OK, série continue
@@ -67,7 +73,7 @@ function endOfDay(score) {
     currentStreak++;
     animateBox("streakBox");
   } else {
-    currentStreak = 0; // si tu veux que la série tombe à zéro
+    currentStreak = 0;
   }
 
   lastPlayedDate = today;
@@ -78,26 +84,6 @@ function endOfDay(score) {
   updateStats();
 }
 
-
-function checkStreakRachat() {
-  const today = new Date().toISOString().split("T")[0]; 
-// Exemple : "2025-11-16"
-  const storedLastPlayedDate = localStorage.getItem("lastPlayedDate"); // ← renommée
-if (storedLastPlayedDate) {
-    const diffDays = Math.floor(
-        (new Date(today) - new Date(storedLastPlayedDate)) / (1000 * 60 * 60 * 24)
-    );
-    if (diffDays > 1) {
-        if (gems >= 19) {
-            gems -= 19;
-            localStorage.setItem("gems", gems);
-        } else {
-            currentStreak = 0;
-        }
-    }
-}
-localStorage.setItem("lastPlayedDate", today);
-}
 // Animation visuelle
 function animateBox(id) {
   const box = document.getElementById(id);
@@ -207,12 +193,15 @@ function startTimer() {
     }
 
     if (timeLeft <= 0) {
-      clearInterval(timerId);
-      feedbackEl.textContent = "Temps écoulé ⏳";
-      feedbackEl.className = "feedback wrong";
-      submitBtn.disabled = true;
-      answerEl.disabled = true;
-    }
+  clearInterval(timerId);
+  feedbackEl.textContent = "Temps écoulé ⏳";
+  feedbackEl.className = "feedback wrong";
+  submitBtn.disabled = true;
+  answerEl.disabled = true;
+
+  endOfDay(score); // ← ajoute ça ici
+}
+
   }, 1000);
 }
 
@@ -243,6 +232,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
