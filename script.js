@@ -105,16 +105,6 @@ function animateBox(id) {
   setTimeout(() => box.classList.remove("animate"), 600);
 }
 
-
-  // Mise à jour de la date et sauvegarde
-  lastPlayedDate = today;
-  localStorage.setItem("streak", currentStreak);
-  localStorage.setItem("gems", gems);
-  localStorage.setItem("lastPlayedDate", lastPlayedDate);
-
-  updateStats();
-}
-
 function updateUI() {
   document.getElementById("streak").textContent = `Série : ${currentStreak}`;
   document.getElementById("gems").textContent = `Gemmes : ${gems}`;
@@ -253,6 +243,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
