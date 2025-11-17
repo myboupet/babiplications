@@ -38,12 +38,6 @@ function checkStreak() {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-function checkStreak() {
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split("T")[0];
-
   if (lastPlayedDate) {
     if (lastPlayedDate === yesterdayStr) {
       // OK, série continue
@@ -97,32 +91,26 @@ function updateUI() {
 }
 
 paramBtn.addEventListener("click", () => {
-  // Ajoute la classe spin
   paramBtn.classList.add("spin");
-
-  // Retire la classe après l’animation pour pouvoir relancer plus tard
   setTimeout(() => {
     paramBtn.classList.remove("spin");
-    // Ici tu peux aussi ouvrir la fenêtre des paramètres
     paramModal.style.display = "flex";
-  }, 1000); // durée de l’animation
+  }, 1000);
 });
+
 let selectedTables = Array.from({length:12}, (_,i)=>i+1);
 
-// Quand on clique sur l’icône paramètre → ouvrir la fenêtre
 paramBtn.addEventListener("click", () => {
-  paramModal.style.display = "flex"; // affiche la modale
+  paramModal.style.display = "flex";
 });
+
 saveTablesBtn.addEventListener("click", () => {
   const checked = [...tablesForm.querySelectorAll("input[type=checkbox]:checked")]
     .map(cb => parseInt(cb.value));
   selectedTables = checked.length ? checked : [1];
-
-  // FERMER la fenêtre
-  paramModal.style.display = "none";   // ← utilise style.display au lieu de hidden
-  startGame();                         // lance le jeu
+  paramModal.style.display = "none";
+  startGame();
 });
-
 
 let score = 0;
 let a, b;
@@ -136,20 +124,19 @@ function newQuestion() {
   answerEl.value = "";
 }
 
-let previousScore = 0; // garde en mémoire le score avant la réponse
+let previousScore = 0;
 
 function checkAnswer() {
   const val = parseInt(answerEl.value, 10);
   if (val === a * b) {
-    previousScore = score;       // sauvegarde l’ancien score
-    score += 10;                 // ajoute les points
+    previousScore = score;
+    score += 10;
     feedbackEl.textContent = "Bravo !";
     feedbackEl.className = "feedback correct";
     correctSound.play();
 
-    // Vérifie si on a franchi un palier de 50
     if (Math.floor(score / 50) > Math.floor(previousScore / 50)) {
-      gems += 1; // ajoute 1 gemme
+      gems += 1;
       animateBox("gemsBox");
       localStorage.setItem("gems", gems);
       updateStats();
@@ -169,7 +156,6 @@ function checkAnswer() {
   setTimeout(newQuestion, 500);
 }
 
-
 function startTimer() {
   timeLeft = 40;
   progressEl.style.width = "100%";
@@ -182,7 +168,6 @@ function startTimer() {
     const percent = (timeLeft / 40) * 100;
     progressEl.style.width = percent + "%";
 
-    // Couleur dynamique
     if (timeLeft > 25) {
       progressEl.style.background = "green";
     } else if (timeLeft > 10) {
@@ -193,15 +178,14 @@ function startTimer() {
     }
 
     if (timeLeft <= 0) {
-  clearInterval(timerId);
-  feedbackEl.textContent = "Temps écoulé ⏳";
-  feedbackEl.className = "feedback wrong";
-  submitBtn.disabled = true;
-  answerEl.disabled = true;
+      clearInterval(timerId);
+      feedbackEl.textContent = "Temps écoulé ⏳";
+      feedbackEl.className = "feedback wrong";
+      submitBtn.disabled = true;
+      answerEl.disabled = true;
 
-  endOfDay(score); // ← ajoute ça ici
-}
-
+      endOfDay(score); // fin de partie → vérifie la série
+    }
   }, 1000);
 }
 
@@ -214,7 +198,6 @@ function startGame() {
   newQuestion();
   startTimer();
 
-  // Relancer la musique depuis le début
   bgMusic.pause();
   bgMusic.currentTime = 0;
   bgMusic.play();
@@ -226,26 +209,8 @@ answerEl.addEventListener("keydown", (e) => {
 });
 retryBtn.addEventListener("click", startGame);
 
-// Fenêtre "Es-tu prêt ?"
 playBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
   gameDiv.hidden = false;
   startGame();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
