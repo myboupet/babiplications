@@ -27,10 +27,10 @@ function updateStats() {
   document.getElementById("streak").textContent = currentStreak;
   document.getElementById("gems").textContent = gems;
 }
-window.addEventListener("DOMContentLoaded", () => {
-  checkStreak(); // vérifie la série dès le démarrage
-});
 
+window.addEventListener("DOMContentLoaded", () => {
+  checkStreak(); // vérifie la série au démarrage
+});
 
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
@@ -50,25 +50,24 @@ function checkStreak() {
         currentStreak = 0; // série perdue
       }
     }
- 
+  } else {
+    currentStreak = 0; // première fois
   }
 
   localStorage.setItem("streak", currentStreak);
-  localStorage.setItem("lastPlayedDate", today);
   updateStats();
 }
 
 function endOfDay(score) {
   const today = new Date().toISOString().split("T")[0];
 
-  // Si déjà joué aujourd’hui → ne rien faire
-  if (lastPlayedDate === today) return;
+  if (lastPlayedDate === today) return; // déjà joué aujourd’hui
 
-  // Le joueur peut rejouer autant qu’il veut, mais la série monte
-  // seulement si une partie ≥ 90 est réussie
   if (score >= 90) {
     currentStreak++;
     animateBox("streakBox");
+  } else {
+    currentStreak = 0; // si tu veux que la série tombe à zéro
   }
 
   lastPlayedDate = today;
@@ -78,6 +77,7 @@ function endOfDay(score) {
 
   updateStats();
 }
+
 
 function checkStreakRachat() {
   const today = new Date().toISOString().split("T")[0]; 
@@ -253,6 +253,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
