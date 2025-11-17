@@ -28,10 +28,9 @@ function updateStats() {
   document.getElementById("gems").textContent = gems;
 }
 window.addEventListener("DOMContentLoaded", () => {
-  const today = new Date().toDateString();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  checkStreak(); // vérifie la série dès le démarrage
 });
+
 
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
@@ -51,8 +50,7 @@ function checkStreak() {
         currentStreak = 0; // série perdue
       }
     }
-  } else {
-    currentStreak = 0; // première fois
+ 
   }
 
   localStorage.setItem("streak", currentStreak);
@@ -107,20 +105,6 @@ function animateBox(id) {
   setTimeout(() => box.classList.remove("animate"), 600);
 }
 
-// Fin de partie
-function endOfDay(score) {
-  const today = new Date().toISOString().split("T")[0];
-
-  // Empêche de rejouer plusieurs fois dans la même journée
-  if (lastPlayedDate === today) return;
-
-  if (score >= 90) {
-    // Partie réussie → on augmente la série
-    currentStreak++;
-    animateBox("streakBox");
-  } else {
-    
-}
 
   // Mise à jour de la date et sauvegarde
   lastPlayedDate = today;
@@ -269,6 +253,7 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
