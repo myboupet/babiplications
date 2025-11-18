@@ -250,5 +250,34 @@ button {
   }
 }
 
+.param-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  height: 40px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  z-index: 2000;            /* au-dessus du HUD */
+}
+
+.logo {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  height: 50px;
+  z-index: 2000;            /* au-dessus du HUD */
+}
+
+/* sécurité : s'assurer que le HUD ne bloque pas les clics en dehors de ses cases */
+.hud {
+  pointer-events: none;     /* le HUD ne capte pas les clics */
+}
+
+.hud .stat-box {
+  pointer-events: auto;     /* mais les cases restent cliquables si besoin */
+}
+
+
+
 
 
