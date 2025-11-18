@@ -280,23 +280,32 @@ button {
 @media (max-width: 480px) {
   .hud {
     flex-direction: row;
-    justify-content: space-between;
-    padding: 8px 12px;
+    justify-content: space-around;
+    padding: 8px 6px;
     gap: 10px;
   }
 
   .stat-box {
-    width: auto;
-    min-width: 80px;
-    max-width: 120px;
-    font-size: 0.9rem;
-    padding: 6px 8px;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    width: 60px;
+    height: 60px;
+    padding: 6px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    box-shadow: 0 0 10px #0ff;
+    font-size: 0.8rem;
   }
 
   .stat-icon {
-    height: 20px;
-    margin-right: 4px;
+    height: 24px;
+    margin: 0;
+  }
+
+  .stat-box span {
+    margin-top: 4px;
+    font-weight: bold;
   }
 }
 
