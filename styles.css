@@ -249,7 +249,7 @@ button {
     justify-content: space-around;
     padding: 8px 6px;
     gap: 10px;
-    pointer-events: none;
+    pointer-events: none; /* le HUD ne bloque pas */
   }
 
   .hud .stat-box {
@@ -260,7 +260,7 @@ button {
     width: 60px;
     height: 60px;
     padding: 6px;
-    border-radius: 50%;
+    border-radius: 50%; /* rond */
     background: rgba(0,0,0,0.7);
     box-shadow: 0 0 10px #0ff;
     font-size: 0.8rem;
@@ -276,24 +276,13 @@ button {
     font-weight: bold;
   }
 
-  .param-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    height: 40px;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-    z-index: 2000;
-  }
-
+  .param-btn,
   .logo {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    height: 50px;
-    z-index: 2000;
+    pointer-events: auto; /* cliquables */
+    z-index: 2000;        /* au-dessus du HUD */
   }
 }
+
 
 
 
