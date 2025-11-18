@@ -251,10 +251,9 @@ button {
     gap: 10px;
     pointer-events: none;
   }
-  
-.hud .stat-box {
-  pointer-events: auto; 
-  .stat-box {
+
+  .hud .stat-box {
+    pointer-events: auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -267,35 +266,35 @@ button {
     font-size: 0.8rem;
   }
 
-  .param-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  height: 40px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  z-index: 2000;            /* au-dessus du HUD */
-}
-
-.logo {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  height: 50px;
-  z-index: 2000;            /* au-dessus du HUD */
-}
-
-
-  .stat-icon {
+  .hud .stat-icon {
     height: 24px;
     margin: 0;
   }
 
-  .stat-box span {
+  .hud .stat-box span {
     margin-top: 4px;
     font-weight: bold;
   }
+
+  .param-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 40px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    z-index: 2000;
+  }
+
+  .logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 50px;
+    z-index: 2000;
+  }
 }
+
 
 
 
