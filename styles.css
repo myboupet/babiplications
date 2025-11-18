@@ -245,11 +245,14 @@ button {
 
 @media (max-width: 480px) {
   .hud {
+    position: absolute;
+    top: 10px;
+    right: 60px; /* espace pour laisser le bouton paramètre à droite */
     flex-direction: row;
-    justify-content: space-around;
-    padding: 8px 6px;
-    gap: 10px;
-    pointer-events: none; /* le HUD ne bloque pas */
+    gap: 8px;
+    background: none; /* pas de bandeau qui gêne */
+    padding: 0;
+    pointer-events: none; /* ne bloque pas les clics */
   }
 
   .hud .stat-box {
@@ -257,38 +260,40 @@ button {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 60px;
-    padding: 6px;
+    width: 45px;   /* plus petit */
+    height: 45px;  /* plus petit */
+    padding: 4px;
     border-radius: 50%; /* rond */
     background: rgba(0,0,0,0.7);
-    box-shadow: 0 0 10px #0ff;
-    font-size: 0.8rem;
+    box-shadow: 0 0 6px #0ff;
+    font-size: 0.7rem;
   }
 
   .hud .stat-icon {
-    height: 24px;
+    height: 18px;
     margin: 0;
   }
 
   .hud .stat-box span {
-    margin-top: 4px;
+    margin-top: 2px;
     font-weight: bold;
   }
 
-  .param-btn,
+  .param-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 2000; /* au-dessus du HUD */
+  }
+
   .logo {
-    pointer-events: auto; /* cliquables */
-    z-index: 2000;        /* au-dessus du HUD */
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 50px;
+    z-index: 2000; /* au-dessus du HUD */
   }
 }
-
-
-
-
-
-
-
-
-
 
