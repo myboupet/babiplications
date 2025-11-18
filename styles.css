@@ -242,15 +242,32 @@ button {
   100% { transform: scale(1); box-shadow: 0 0 10px #0ff; }
 }
 
-/* Sur mobile : HUD en colonne */
+
 @media (max-width: 480px) {
   .hud {
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 8px 6px;
+    gap: 10px;
+    pointer-events: none;
+  }
+  
+.hud .stat-box {
+  pointer-events: auto; 
+  .stat-box {
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    padding: 6px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    box-shadow: 0 0 10px #0ff;
+    font-size: 0.8rem;
   }
-}
 
-.param-btn {
+  .param-btn {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -268,35 +285,6 @@ button {
   z-index: 2000;            /* au-dessus du HUD */
 }
 
-/* sécurité : s'assurer que le HUD ne bloque pas les clics en dehors de ses cases */
-.hud {
-  pointer-events: none;     /* le HUD ne capte pas les clics */
-}
-
-.hud .stat-box {
-  pointer-events: auto;     /* mais les cases restent cliquables si besoin */
-}
-
-@media (max-width: 480px) {
-  .hud {
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 8px 6px;
-    gap: 10px;
-  }
-
-  .stat-box {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    padding: 6px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.7);
-    box-shadow: 0 0 10px #0ff;
-    font-size: 0.8rem;
-  }
 
   .stat-icon {
     height: 24px;
@@ -308,6 +296,7 @@ button {
     font-weight: bold;
   }
 }
+
 
 
 
