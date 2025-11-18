@@ -205,15 +205,16 @@ button {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;                 /* prend toute la largeur */
+  width: 100%;
   display: flex;
-  justify-content: center;     /* centré horizontalement */
+  justify-content: center;
   gap: 20px;
   padding: 10px;
-  background: rgba(0,0,0,0.4); /* bandeau semi-transparent */
-  z-index: 1000; /* au-dessus du reste */
-  pointer-events: none;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  pointer-events: auto; /* clics autorisés */
 }
+
 
 .stat-box {
   display: flex;
@@ -253,19 +254,21 @@ button {
     gap: 6px;
     background: none;
     padding: 0;
-}
+    pointer-events: none; /* HUD ne bloque pas */
+  }
 
   .hud .stat-box {
     pointer-events: auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 40px;   /* plus petit */
+    width: 40px;
     height: 40px;
     border-radius: 50%;
     background: rgba(0,0,0,0.7);
     box-shadow: 0 0 6px #0ff;
     font-size: 0.7rem;
+    padding: 4px;
   }
 
   .hud .stat-icon {
@@ -297,5 +300,3 @@ button {
     pointer-events: auto;
   }
 }
-
-
