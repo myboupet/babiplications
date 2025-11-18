@@ -65,6 +65,7 @@ input, button {
   height: 40px;
   cursor: pointer;
   transition: transform 0.3s ease;
+  z-index: 10; 
 }
 
 /* Classe qui déclenche la rotation */
@@ -118,6 +119,7 @@ input, button {
   top: 10px;
   left: 10px;
   height: 50px; /* ajuste la taille */
+  z-index: 10; 
 }
 
 .overlay {
@@ -296,5 +298,6 @@ button {
     z-index: 2000;
   }
 }
+
 
 
