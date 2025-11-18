@@ -277,6 +277,31 @@ button {
   pointer-events: auto;     /* mais les cases restent cliquables si besoin */
 }
 
+@media (max-width: 480px) {
+  .hud {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .stat-box {
+    width: auto;
+    min-width: 80px;
+    max-width: 120px;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    justify-content: center;
+  }
+
+  .stat-icon {
+    height: 20px;
+    margin-right: 4px;
+  }
+}
+
+
+
 
 
 
