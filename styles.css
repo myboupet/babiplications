@@ -211,7 +211,8 @@ button {
   gap: 20px;
   padding: 10px;
   background: rgba(0,0,0,0.4); /* bandeau semi-transparent */
-  z-index: 1000;               /* au-dessus du reste */
+  z-index: 1000; /* au-dessus du reste */
+  pointer-events: none;
 }
 
 .stat-box {
@@ -247,30 +248,28 @@ button {
   .hud {
     position: absolute;
     top: 10px;
-    right: 60px; /* espace pour laisser le bouton paramètre à droite */
+    right: 60px; /* espace pour le bouton paramètre */
     flex-direction: row;
-    gap: 8px;
-    background: none; /* pas de bandeau qui gêne */
+    gap: 6px;
+    background: none;
     padding: 0;
-    pointer-events: none; /* ne bloque pas les clics */
-  }
+}
 
   .hud .stat-box {
     pointer-events: auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 45px;   /* plus petit */
-    height: 45px;  /* plus petit */
-    padding: 4px;
-    border-radius: 50%; /* rond */
+    width: 40px;   /* plus petit */
+    height: 40px;
+    border-radius: 50%;
     background: rgba(0,0,0,0.7);
     box-shadow: 0 0 6px #0ff;
     font-size: 0.7rem;
   }
 
   .hud .stat-icon {
-    height: 18px;
+    height: 16px;
     margin: 0;
   }
 
@@ -285,7 +284,8 @@ button {
     right: 10px;
     height: 40px;
     cursor: pointer;
-    z-index: 2000; /* au-dessus du HUD */
+    z-index: 2000;
+    pointer-events: auto;
   }
 
   .logo {
@@ -293,7 +293,9 @@ button {
     top: 10px;
     left: 10px;
     height: 50px;
-    z-index: 2000; /* au-dessus du HUD */
+    z-index: 2000;
+    pointer-events: auto;
   }
 }
+
 
