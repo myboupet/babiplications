@@ -249,16 +249,15 @@ button {
   .hud {
     position: absolute;
     top: 10px;
-    right: 60px; /* espace pour le bouton paramètre */
+    right: 60px; /* HUD placé juste à gauche du bouton */
+    display: flex;
     flex-direction: row;
     gap: 6px;
     background: none;
     padding: 0;
-    pointer-events: none; /* HUD ne bloque pas */
   }
 
   .hud .stat-box {
-    pointer-events: auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -284,11 +283,10 @@ button {
   .param-btn {
     position: absolute;
     top: 10px;
-    right: 10px;
+    right: 10px; /* bouton collé au bord droit */
     height: 40px;
     cursor: pointer;
     z-index: 2000;
-    pointer-events: auto;
   }
 
   .logo {
@@ -297,6 +295,6 @@ button {
     left: 10px;
     height: 50px;
     z-index: 2000;
-    pointer-events: auto;
   }
 }
+
