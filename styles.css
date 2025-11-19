@@ -250,7 +250,7 @@ button {
   .hud {
     position: absolute;
     top: 10px;
-    right: 160px; /* HUD placé juste à gauche du bouton */
+    right: 20%; /* HUD placé juste à gauche du bouton */
     display: flex;
     flex-direction: row;
     gap: 6px;
@@ -298,6 +298,7 @@ button {
     z-index: 2000;
   }
 }
+
 
 
 
