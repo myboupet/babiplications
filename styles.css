@@ -247,29 +247,25 @@ button {
 
 
 @media (max-width: 480px) {
-  .hud {
-    position: absolute;
-    top: 10px;
-    right: 20%; /* HUD placé juste à gauche du bouton */
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
-    background: none;
-    padding: 0;
-  }
+.hud {
+  display: flex;
+  justify-content: flex-end; /* pousse tout le contenu vers la droite */
+  gap: 6px;
+  padding: 0;
+}
 
-  .hud .stat-box {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 20%;
-    background: rgba(0,0,0,0.7);
-    box-shadow: 0 0 6px #0ff;
-    font-size: 0.7rem;
-    padding: 4px;
-  }
+.hud .stat-box {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 20%;
+  background: rgba(0,0,0,0.7);
+  box-shadow: 0 0 6px #0ff;
+  font-size: 0.7rem;
+  padding: 4px;
+}
 
   .hud .stat-icon {
     height: 16px;
@@ -298,6 +294,7 @@ button {
     z-index: 2000;
   }
 }
+
 
 
 
