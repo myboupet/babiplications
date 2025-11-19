@@ -8,7 +8,13 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <img class="logo" src="logo.png" srcset="favicon.png 768w" alt="Logo">
+  <picture>
+  <!-- Logo spécial pour mobile -->
+  <source srcset="favicon.png" media="(max-width: 768px)">
+  <!-- Logo par défaut (ordinateur) -->
+  <img src="logo.png" alt="Logo" class="logo">
+  </picture>
+
 
   <!-- Fenêtre de démarrage -->
   <div id="startScreen" class="overlay">
@@ -82,6 +88,7 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
