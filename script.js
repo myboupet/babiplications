@@ -61,13 +61,16 @@ function checkStreak() {
 function endOfDay(score) {
   const today = new Date().toISOString().split("T")[0];
 
-  if (lastPlayedDate === today) return; // déjà joué aujourd’hui
-
-  if (score >= 90) {
-    currentStreak++;
+  if (score >= 90 && currentStreak === 0) {
+    currentStreak = 1;
     animateBox("streakBox");
   } else {
-    currentStreak = 0;
+    if (lastPlayedDate === today) return; // déjà joué aujourd’hui
+
+    if (score >= 90) {
+      currentStreak++;
+      animateBox("streakBox");
+    }
   }
 
   lastPlayedDate = today;
@@ -77,6 +80,7 @@ function endOfDay(score) {
 
   updateStats();
 }
+
 
 // Animation visuelle
 function animateBox(id) {
@@ -214,3 +218,4 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
