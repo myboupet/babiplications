@@ -264,7 +264,7 @@ button {
     justify-content: center;
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: 20%;
     background: rgba(0,0,0,0.7);
     box-shadow: 0 0 6px #0ff;
     font-size: 0.7rem;
@@ -298,6 +298,7 @@ button {
     z-index: 2000;
   }
 }
+
 
 
 
