@@ -61,25 +61,26 @@ function checkStreak() {
 function endOfDay(score) {
   const today = new Date().toISOString().split("T")[0];
 
-  if (score >= 90 && currentStreak === 0) {
-    currentStreak = 1;
-    animateBox("streakBox");
-  } else {
-    if (lastPlayedDate === today) return; // déjà joué aujourd’hui
-
-    if (score >= 90) {
+  if (score >= 90) {
+    if (currentStreak === 0) {
+      // première réussite → démarre la série
+      currentStreak = 1;
+    } else if (lastPlayedDate !== today) {
+      // nouvelle journée réussie → incrémente la série
       currentStreak++;
-      animateBox("streakBox");
     }
+    animateBox("streakBox");
+    lastPlayedDate = today; // on valide la journée seulement si score >= 90
   }
 
-  lastPlayedDate = today;
+  // sauvegarde
   localStorage.setItem("streak", currentStreak);
   localStorage.setItem("gems", gems);
   localStorage.setItem("lastPlayedDate", lastPlayedDate);
 
   updateStats();
 }
+
 
 
 // Animation visuelle
@@ -218,4 +219,5 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
