@@ -307,6 +307,12 @@ button {
     z-index: 2000;
   }
 }
+/* Les éléments avec hidden doivent être invisibles dans tous les cas */
+[hidden] {
+  display: none !important;
+}
+
+
 
 
 
