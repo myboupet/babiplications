@@ -32,6 +32,8 @@ window.addEventListener("DOMContentLoaded", () => {
   checkStreak(); // vérifie la série au démarrage
 });
 
+let calcStats = JSON.parse(localStorage.getItem("calcStats")) || {};
+
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date();
@@ -123,11 +125,24 @@ let timeLeft = 40;
 let timerId;
 
 function newQuestion() {
-  a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+  const fails = Object.entries(calcStats)
+    .filter(([_, data]) => data.fail > data.success) // calculs faibles
+    .map(([key]) => key);
+
+  let useFail = fails.length > 0 && Math.random() < 0.5; // 50% de chance
+
+  if (useFail) {
+    const [fa] = fails[Math.floor(Math.random() * fails.length)].split("x");
+    a = parseInt(fa);
+  } else {
+    a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+  }
+
   b = Math.floor(Math.random() * 12) + 1;
   questionEl.textContent = `${a} × ${b} = ?`;
   answerEl.value = "";
 }
+
 
 let previousScore = 0;
 
@@ -159,6 +174,15 @@ function checkAnswer() {
   }
   scoreEl.textContent = `Score: ${score}`;
   setTimeout(newQuestion, 500);
+  
+  function recordCalcResult(a, b, success) {
+  const key = `${a}x${b}`;
+  if (!calcStats[key]) calcStats[key] = {success:0, fail:0};
+  if (success) calcStats[key].success++;
+  else calcStats[key].fail++;
+  localStorage.setItem("calcStats", JSON.stringify(calcStats));
+}
+
 }
 
 function startTimer() {
@@ -219,5 +243,6 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
