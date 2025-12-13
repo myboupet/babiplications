@@ -282,18 +282,11 @@ retryBtn.addEventListener("click", startGame);
 // --- Stats IA UI ---
 if (statsBtn) {
   statsBtn.addEventListener("click", () => {
-    renderStats();
-    statsModal.hidden = false;
-
-    statsBtn.hidden = true;
-    const statsVideo = document.getElementById("statsLogoVideo");
-    statsVideo.hidden = false;
-    statsVideo.play();
+    // Récupère les stats
     const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
     statsContent.innerHTML = "";
 
     const lines = [];
-    // Trier par faiblesse (plus de fails en premier)
     const entries = Object.entries(stats).sort((a, b) => {
       const sa = a[1].fail - a[1].success;
       const sb = b[1].fail - b[1].success;
@@ -320,7 +313,7 @@ if (statsBtn) {
       lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
     }
 
-    // Effet chatbot: apparition en fondu, ligne par ligne
+    // Effet chatbot: apparition en fondu
     lines.forEach((line, i) => {
       const div = document.createElement("div");
       div.className = "stats-line";
@@ -329,9 +322,17 @@ if (statsBtn) {
       statsContent.appendChild(div);
     });
 
+    // Ouvre la modale
     statsModal.hidden = false;
+
+    // Lance la vidéo du logo stats
+    statsBtn.hidden = true;
+    const statsVideo = document.getElementById("statsLogoVideo");
+    statsVideo.hidden = false;
+    statsVideo.play();
   });
 }
+
 
 if (closeStatsBtn) {
   closeStatsBtn.addEventListener("click", () => {
@@ -348,5 +349,6 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
