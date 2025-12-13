@@ -286,34 +286,33 @@ statsBtn?.addEventListener("click", () => {
   statsContent.innerHTML = "";
 
   const lines = [];
-const entries = Object.entries(calcStats).filter(([_, data]) => {
   // On ne garde que les calculs qui ont déjà été faibles
-  return data.fail > 0;
-}).sort((a, b) => {
-  const sa = a[1].fail - a[1].success;
-  const sb = b[1].fail - b[1].success;
-  return sb - sa;
-});
+  const entries = Object.entries(stats).filter(([_, data]) => data.fail > 0)
+    .sort((a, b) => {
+      const sa = a[1].fail - a[1].success;
+      const sb = b[1].fail - b[1].success;
+      return sb - sa;
+    });
 
-for (const [calc, { success = 0, fail = 0 }] of entries) {
-  const total = success + fail;
-  if (total > 0) {
-    const rate = Math.round((success / total) * 100);
-    let message;
-    if (fail > success) {
-      message = `🤖 ${calc} te pose encore problème (${fail} erreurs). On va le revoir.`;
-    } else {
-      message = `🤖 Tu maîtrises mieux ${calc} maintenant (réussite ${rate}%).`;
+  for (const [calc, { success = 0, fail = 0 }] of entries) {
+    const total = success + fail;
+    if (total > 0) {
+      const rate = Math.round((success / total) * 100);
+      let message;
+      if (fail > success) {
+        message = `🤖 ${calc} te pose encore problème (${fail} erreurs). On va le revoir.`;
+      } else {
+        message = `🤖 Tu maîtrises mieux ${calc} maintenant (réussite ${rate}%).`;
+      }
+      lines.push(message);
     }
-    lines.push(message);
   }
-}
-
 
   if (lines.length === 0) {
     lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
   }
 
+  // Effet chatbot: apparition en fondu
   lines.forEach((line, i) => {
     const div = document.createElement("div");
     div.className = "stats-line";
@@ -329,9 +328,8 @@ for (const [calc, { success = 0, fail = 0 }] of entries) {
   if (statsLogoVideo) {
     statsBtn.hidden = true;
     statsLogoVideo.hidden = false;
-    statsLogoVideo.play().catch(() => {
-      // Si autoplay bloqué, on ignore
-    });
+    statsLogoVideo.style.display = "block";
+    statsLogoVideo.play().catch(() => {});
   }
 });
 
@@ -339,22 +337,18 @@ closeStatsBtn?.addEventListener("click", () => {
   // Ferme la fenêtre stats
   closeModal(statsModal);
 
- if (closeStatsBtn) {
-  closeStatsBtn.addEventListener("click", () => {
-    // Ferme la fenêtre stats
-    statsModal.hidden = true;
+  // Stoppe et cache la vidéo du logo stats
+  if (statsLogoVideo) {
+    statsLogoVideo.pause();
+    statsLogoVideo.currentTime = 0;
+    statsLogoVideo.hidden = true;
+    statsLogoVideo.style.display = "none";
+  }
 
-    // Stoppe et cache la vidéo du logo stats
-    const statsVideo = document.getElementById("statsLogoVideo");
-    if (statsVideo) {
-      statsVideo.pause();
-      statsVideo.currentTime = 0;
-      statsVideo.hidden = true;
-    }
+  // Réaffiche le bouton image
+  if (statsBtn) statsBtn.hidden = false;
+});
 
-    // Réaffiche le bouton image
-    if (statsBtn) statsBtn.hidden = false;
-  });
-}
+
 
 
