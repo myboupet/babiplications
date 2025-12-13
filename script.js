@@ -286,27 +286,29 @@ statsBtn?.addEventListener("click", () => {
   statsContent.innerHTML = "";
 
   const lines = [];
-  const entries = Object.entries(stats).sort((a, b) => {
-    const sa = (a[1].fail || 0) - (a[1].success || 0);
-    const sb = (b[1].fail || 0) - (b[1].success || 0);
-    return sb - sa;
-  });
+const entries = Object.entries(calcStats).filter(([_, data]) => {
+  // On ne garde que les calculs qui ont déjà été faibles
+  return data.fail > 0;
+}).sort((a, b) => {
+  const sa = a[1].fail - a[1].success;
+  const sb = b[1].fail - b[1].success;
+  return sb - sa;
+});
 
-  for (const [calc, { success = 0, fail = 0 }] of entries) {
-    const total = success + fail;
-    if (total > 0) {
-      const rate = Math.round((success / total) * 100);
-      let message;
-      if (rate < 50) {
-        message = `🤖 J'observe que ${calc} te pose problème (${fail} erreurs). On va le refaire plus souvent.`;
-      } else if (rate < 75) {
-        message = `🤖 Pas mal sur ${calc} (réussite ${rate}%). Encore un peu d’entraînement et ce sera parfait.`;
-      } else {
-        message = `🤖 Solide sur ${calc} (réussite ${rate}%). Tu peux le laisser respirer.`;
-      }
-      lines.push(message);
+for (const [calc, { success = 0, fail = 0 }] of entries) {
+  const total = success + fail;
+  if (total > 0) {
+    const rate = Math.round((success / total) * 100);
+    let message;
+    if (fail > success) {
+      message = `🤖 ${calc} te pose encore problème (${fail} erreurs). On va le revoir.`;
+    } else {
+      message = `🤖 Tu maîtrises mieux ${calc} maintenant (réussite ${rate}%).`;
     }
+    lines.push(message);
   }
+}
+
 
   if (lines.length === 0) {
     lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
@@ -337,11 +339,22 @@ closeStatsBtn?.addEventListener("click", () => {
   // Ferme la fenêtre stats
   closeModal(statsModal);
 
-  // Stoppe la vidéo du logo stats et remet le bouton image
-  if (statsLogoVideo) {
-    statsLogoVideo.pause();
-    statsLogoVideo.currentTime = 0;
-    statsLogoVideo.hidden = true;
+ if (closeStatsBtn) {
+  closeStatsBtn.addEventListener("click", () => {
+    // Ferme la fenêtre stats
+    statsModal.hidden = true;
+
+    // Stoppe et cache la vidéo du logo stats
+    const statsVideo = document.getElementById("statsLogoVideo");
+    if (statsVideo) {
+      statsVideo.pause();
+      statsVideo.currentTime = 0;
+      statsVideo.hidden = true;
+    }
+
+    // Réaffiche le bouton image
     if (statsBtn) statsBtn.hidden = false;
-  }
-});
+  });
+}
+
+
