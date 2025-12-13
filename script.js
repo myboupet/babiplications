@@ -299,18 +299,18 @@ if (statsBtn) {
         const rate = Math.round((success / total) * 100);
         let message;
         if (rate < 50) {
-          message = `🤖 J'observe que ${calc} te pose problème (${fail} erreurs). On va le refaire plus souvent.`;
+          message = `J'observe que ${calc} te pose problème (${fail} erreurs). On va le refaire plus souvent.`;
         } else if (rate < 75) {
-          message = `🤖 Pas mal sur ${calc} (réussite ${rate}%). Encore un peu d’entraînement et ce sera parfait.`;
+          message = `Pas mal sur ${calc} (réussite ${rate}%). Encore un peu d’entraînement et ce sera parfait.`;
         } else {
-          message = `🤖 Solide sur ${calc} (réussite ${rate}%). Tu peux le laisser respirer.`;
+          message = `Solide sur ${calc} (réussite ${rate}%). Tu peux le laisser respirer.`;
         }
         lines.push(message);
       }
     }
 
     if (lines.length === 0) {
-      lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
+      lines.push("Rien à signaler pour l’instant. Continue comme ça !");
     }
 
     // Effet chatbot: apparition en fondu
@@ -336,19 +336,26 @@ if (statsBtn) {
 
 if (closeStatsBtn) {
   closeStatsBtn.addEventListener("click", () => {
+    // Ferme la fenêtre stats
     statsModal.hidden = true;
 
+    // Stoppe la vidéo du logo stats
     const statsVideo = document.getElementById("statsLogoVideo");
     statsVideo.pause();
+    statsVideo.currentTime = 0; // remet au début
     statsVideo.hidden = true;
+
+    // Réaffiche le bouton image
     statsBtn.hidden = false;
   });
 }
+
 playBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
