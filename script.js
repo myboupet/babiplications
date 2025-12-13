@@ -19,9 +19,18 @@ const paramModal = document.getElementById("paramModal");
 const saveTablesBtn = document.getElementById("saveTables");
 const tablesForm = document.getElementById("tablesForm");
 
+// NEW: Stats UI
+const statsBtn = document.getElementById("statsBtn");
+const statsModal = document.getElementById("statsModal");
+const statsContent = document.getElementById("statsContent");
+const closeStatsBtn = document.getElementById("closeStats");
+
 let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
 let gems = parseInt(localStorage.getItem("gems")) || 0;
 let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
+
+// Calculs faibles (persistés mais avec déclin progressif)
+let calcStats = JSON.parse(localStorage.getItem("calcStats")) || {};
 
 function updateStats() {
   document.getElementById("streak").textContent = currentStreak;
@@ -29,10 +38,9 @@ function updateStats() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  checkStreak(); // vérifie la série au démarrage
+  checkStreak();
+  updateStats();
 });
-
-let calcStats = JSON.parse(localStorage.getItem("calcStats")) || {};
 
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
@@ -42,18 +50,18 @@ function checkStreak() {
 
   if (lastPlayedDate) {
     if (lastPlayedDate === yesterdayStr) {
-      // OK, série continue
+      // série continue
     } else if (lastPlayedDate !== today) {
-      // Jour manqué → payer ou perdre
+      // jour manqué → payer ou perdre
       if (gems >= 19) {
-        gems -= 19; // payer pour sauver
+        gems -= 19;
         localStorage.setItem("gems", gems);
       } else {
-        currentStreak = 0; // série perdue
+        currentStreak = 0;
       }
     }
   } else {
-    currentStreak = 0; // première fois
+    currentStreak = 0;
   }
 
   localStorage.setItem("streak", currentStreak);
@@ -65,25 +73,20 @@ function endOfDay(score) {
 
   if (score >= 90) {
     if (currentStreak === 0) {
-      // première réussite → démarre la série
       currentStreak = 1;
     } else if (lastPlayedDate !== today) {
-      // nouvelle journée réussie → incrémente la série
       currentStreak++;
     }
     animateBox("streakBox");
-    lastPlayedDate = today; // on valide la journée seulement si score >= 90
+    lastPlayedDate = today;
   }
 
-  // sauvegarde
   localStorage.setItem("streak", currentStreak);
   localStorage.setItem("gems", gems);
   localStorage.setItem("lastPlayedDate", lastPlayedDate);
 
   updateStats();
 }
-
-
 
 // Animation visuelle
 function animateBox(id) {
@@ -97,6 +100,7 @@ function updateUI() {
   document.getElementById("gems").textContent = `Gemmes : ${gems}`;
 }
 
+// Paramètres
 paramBtn.addEventListener("click", () => {
   paramBtn.classList.add("spin");
   setTimeout(() => {
@@ -105,11 +109,7 @@ paramBtn.addEventListener("click", () => {
   }, 1000);
 });
 
-let selectedTables = Array.from({length:12}, (_,i)=>i+1);
-
-paramBtn.addEventListener("click", () => {
-  paramModal.style.display = "flex";
-});
+let selectedTables = Array.from({ length: 12 }, (_, i) => i + 1);
 
 saveTablesBtn.addEventListener("click", () => {
   const checked = [...tablesForm.querySelectorAll("input[type=checkbox]:checked")]
@@ -119,36 +119,58 @@ saveTablesBtn.addEventListener("click", () => {
   startGame();
 });
 
+// --- Jeu ---
 let score = 0;
 let a, b;
 let timeLeft = 40;
 let timerId;
 
-function newQuestion() {
-  const fails = Object.entries(calcStats)
-    .filter(([_, data]) => data.fail > data.success) // calculs faibles
+// NEW: enregistre chaque résultat (global)
+function recordCalcResult(a, b, success) {
+  const key = `${a}x${b}`;
+  if (!calcStats[key]) calcStats[key] = { success: 0, fail: 0 };
+  if (success) calcStats[key].success++;
+  else calcStats[key].fail++;
+  localStorage.setItem("calcStats", JSON.stringify(calcStats));
+}
+
+// NEW: sélectionne 50% des questions depuis calculs faibles (a ET b)
+function pickQuestion() {
+  // Liste des calculs faibles (fail > success)
+  const weakCalcs = Object.entries(calcStats)
+    .filter(([_, data]) => (data.fail || 0) > (data.success || 0))
     .map(([key]) => key);
 
-  let useFail = fails.length > 0 && Math.random() < 0.5; // 50% de chance
+  const useWeak = weakCalcs.length > 0 && Math.random() < 0.5;
 
-  if (useFail) {
-    const [fa] = fails[Math.floor(Math.random() * fails.length)].split("x");
-    a = parseInt(fa);
+  if (useWeak) {
+    const [wa, wb] = weakCalcs[Math.floor(Math.random() * weakCalcs.length)].split("x");
+    a = parseInt(wa, 10);
+    b = parseInt(wb, 10);
+    // Si la table 'a' n'est pas sélectionnée par l’utilisateur, on fallback
+    if (!selectedTables.includes(a)) {
+      a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+      b = Math.floor(Math.random() * 12) + 1;
+    }
   } else {
     a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+    b = Math.floor(Math.random() * 12) + 1;
   }
+}
 
-  b = Math.floor(Math.random() * 12) + 1;
+function newQuestion() {
+  pickQuestion();
   questionEl.textContent = `${a} × ${b} = ?`;
   answerEl.value = "";
 }
-
 
 let previousScore = 0;
 
 function checkAnswer() {
   const val = parseInt(answerEl.value, 10);
-  if (val === a * b) {
+  const isCorrect = val === a * b;
+
+  if (isCorrect) {
     previousScore = score;
     score += 10;
     feedbackEl.textContent = "Bravo !";
@@ -166,23 +188,18 @@ function checkAnswer() {
     setTimeout(() => gameDiv.classList.remove("flash-green"), 1000);
   } else {
     score = Math.max(0, score - 5);
-    feedbackEl.textContent = `Raté… c'était ${a*b}`;
+    feedbackEl.textContent = `Raté… c'était ${a * b}`;
     feedbackEl.className = "feedback wrong";
     wrongSound.play();
     gameDiv.classList.add("flash-red");
     setTimeout(() => gameDiv.classList.remove("flash-red"), 1000);
   }
+
+  // NEW: enregistrer le résultat du calcul
+  recordCalcResult(a, b, isCorrect);
+
   scoreEl.textContent = `Score: ${score}`;
   setTimeout(newQuestion, 500);
-  
-  function recordCalcResult(a, b, success) {
-  const key = `${a}x${b}`;
-  if (!calcStats[key]) calcStats[key] = {success:0, fail:0};
-  if (success) calcStats[key].success++;
-  else calcStats[key].fail++;
-  localStorage.setItem("calcStats", JSON.stringify(calcStats));
-}
-
 }
 
 function startTimer() {
@@ -212,10 +229,25 @@ function startTimer() {
       feedbackEl.className = "feedback wrong";
       submitBtn.disabled = true;
       answerEl.disabled = true;
-
-      endOfDay(score); // fin de partie → vérifie la série
+      endOfDay(score);
     }
   }, 1000);
+}
+
+// NEW: déclin des stats (pour ne pas rester indéfiniment)
+function decayCalcStats() {
+  let changed = false;
+  for (const key in calcStats) {
+    const s = calcStats[key];
+    if (s.success > 0) { s.success--; changed = true; }
+    if (s.fail > 0) { s.fail--; changed = true; }
+    // Nettoyage si les deux tombent à 0
+    if (s.success === 0 && s.fail === 0) {
+      delete calcStats[key];
+      changed = true;
+    }
+  }
+  if (changed) localStorage.setItem("calcStats", JSON.stringify(calcStats));
 }
 
 function startGame() {
@@ -224,6 +256,10 @@ function startGame() {
   feedbackEl.textContent = "";
   submitBtn.disabled = false;
   answerEl.disabled = false;
+
+  // NEW: déclin léger au début de chaque partie
+  decayCalcStats();
+
   newQuestion();
   startTimer();
 
@@ -238,45 +274,61 @@ answerEl.addEventListener("keydown", (e) => {
 });
 retryBtn.addEventListener("click", startGame);
 
-document.getElementById("statsBtn").addEventListener("click", () => {
-  const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
-  const container = document.getElementById("statsContent");
-  container.innerHTML = "";
+// --- Stats IA UI ---
+if (statsBtn) {
+  statsBtn.addEventListener("click", () => {
+    const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
+    statsContent.innerHTML = "";
 
-  let lines = [];
-  for (const calc in stats) {
-    const {success, fail} = stats[calc];
-    const total = success + fail;
-    if (total > 0) {
-      const rate = Math.round((success/total)*100);
-      let message;
-      if (rate < 50) {
-        message = `🤖 Je vois que ${calc} est souvent raté (${fail} erreurs). Révise ce calcul !`;
-      } else {
-        message = `🤖 Bien joué sur ${calc}, taux de réussite ${rate}%.`;
+    const lines = [];
+    // Trier par faiblesse (plus de fails en premier)
+    const entries = Object.entries(stats).sort((a, b) => {
+      const sa = a[1].fail - a[1].success;
+      const sb = b[1].fail - b[1].success;
+      return sb - sa;
+    });
+
+    for (const [calc, { success, fail }] of entries) {
+      const total = success + fail;
+      if (total > 0) {
+        const rate = Math.round((success / total) * 100);
+        let message;
+        if (rate < 50) {
+          message = `🤖 J'observe que ${calc} te pose problème (${fail} erreurs). On va le refaire plus souvent.`;
+        } else if (rate < 75) {
+          message = `🤖 Pas mal sur ${calc} (réussite ${rate}%). Encore un peu d’entraînement et ce sera parfait.`;
+        } else {
+          message = `🤖 Solide sur ${calc} (réussite ${rate}%). Tu peux le laisser respirer.`;
+        }
+        lines.push(message);
       }
-      lines.push(message);
     }
-  }
 
-  // Affichage ligne par ligne avec effet chatbot
-  lines.forEach((line, i) => {
-    const div = document.createElement("div");
-    div.className = "stats-line";
-    div.style.animationDelay = `${i*0.8}s`; // décalage progressif
-    div.textContent = line;
-    container.appendChild(div);
+    if (lines.length === 0) {
+      lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
+    }
+
+    // Effet chatbot: apparition en fondu, ligne par ligne
+    lines.forEach((line, i) => {
+      const div = document.createElement("div");
+      div.className = "stats-line";
+      div.style.animationDelay = `${i * 0.8}s`;
+      div.textContent = line;
+      statsContent.appendChild(div);
+    });
+
+    statsModal.hidden = false;
   });
+}
 
-  document.getElementById("statsModal").hidden = false;
-});
+if (closeStatsBtn) {
+  closeStatsBtn.addEventListener("click", () => {
+    statsModal.hidden = true;
+  });
+}
 
 playBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
   gameDiv.hidden = false;
   startGame();
 });
-
-
-
-
