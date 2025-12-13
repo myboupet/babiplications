@@ -238,11 +238,45 @@ answerEl.addEventListener("keydown", (e) => {
 });
 retryBtn.addEventListener("click", startGame);
 
+document.getElementById("statsBtn").addEventListener("click", () => {
+  const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
+  const container = document.getElementById("statsContent");
+  container.innerHTML = "";
+
+  let lines = [];
+  for (const calc in stats) {
+    const {success, fail} = stats[calc];
+    const total = success + fail;
+    if (total > 0) {
+      const rate = Math.round((success/total)*100);
+      let message;
+      if (rate < 50) {
+        message = `🤖 Je vois que ${calc} est souvent raté (${fail} erreurs). Révise ce calcul !`;
+      } else {
+        message = `🤖 Bien joué sur ${calc}, taux de réussite ${rate}%.`;
+      }
+      lines.push(message);
+    }
+  }
+
+  // Affichage ligne par ligne avec effet chatbot
+  lines.forEach((line, i) => {
+    const div = document.createElement("div");
+    div.className = "stats-line";
+    div.style.animationDelay = `${i*0.8}s`; // décalage progressif
+    div.textContent = line;
+    container.appendChild(div);
+  });
+
+  document.getElementById("statsModal").hidden = false;
+});
+
 playBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
   gameDiv.hidden = false;
   startGame();
 });
+
 
 
 
