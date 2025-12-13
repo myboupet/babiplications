@@ -282,6 +282,13 @@ retryBtn.addEventListener("click", startGame);
 // --- Stats IA UI ---
 if (statsBtn) {
   statsBtn.addEventListener("click", () => {
+    renderStats();
+    statsModal.hidden = false;
+
+    statsBtn.hidden = true;
+    const statsVideo = document.getElementById("statsLogoVideo");
+    statsVideo.hidden = false;
+    statsVideo.play();
     const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
     statsContent.innerHTML = "";
 
@@ -329,12 +336,17 @@ if (statsBtn) {
 if (closeStatsBtn) {
   closeStatsBtn.addEventListener("click", () => {
     statsModal.hidden = true;
+
+    const statsVideo = document.getElementById("statsLogoVideo");
+    statsVideo.pause();
+    statsVideo.hidden = true;
+    statsBtn.hidden = false;
   });
 }
-
 playBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
   gameDiv.hidden = false;
   startGame();
 });
+
 
