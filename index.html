@@ -78,6 +78,15 @@
     <div id="score">Score: 0</div>
     <button id="retry">Rejouer</button>
   </div>
+<img src="stats.png" alt="Statistiques" id="statsBtn" class="param-btn">
+
+<div id="statsModal" class="modal" hidden>
+  <div class="modal-content">
+    <h2>🤖 Statistiques IA</h2>
+    <div id="statsContent"></div>
+    <button onclick="document.getElementById('statsModal').hidden=true">Fermer</button>
+  </div>
+</div>
 
   <!-- Musique de fond -->
   <audio id="bgMusic" src="music.mp3"></audio>
@@ -88,6 +97,7 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
