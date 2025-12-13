@@ -1,3 +1,4 @@
+// --- Sélecteurs principaux ---
 const startScreen = document.getElementById("startScreen");
 const playBtn = document.getElementById("playBtn");
 const gameDiv = document.querySelector(".game");
@@ -19,22 +20,30 @@ const paramModal = document.getElementById("paramModal");
 const saveTablesBtn = document.getElementById("saveTables");
 const tablesForm = document.getElementById("tablesForm");
 
-// NEW: Stats UI
+// --- Stats UI ---
 const statsBtn = document.getElementById("statsBtn");
 const statsModal = document.getElementById("statsModal");
 const statsContent = document.getElementById("statsContent");
 const closeStatsBtn = document.getElementById("closeStats");
 
+// --- Vidéo du logo stats (optionnelle, protégée) ---
+const statsLogoVideo = document.getElementById("statsLogoVideo");
+
 let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
 let gems = parseInt(localStorage.getItem("gems")) || 0;
 let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
 
-// Calculs faibles (persistés mais avec déclin progressif)
+// Calculs faibles (persistés)
 let calcStats = JSON.parse(localStorage.getItem("calcStats")) || {};
 
+// Tables sélectionnées (doit exister AVANT pickQuestion)
+let selectedTables = Array.from({ length: 12 }, (_, i) => i + 1);
+
 function updateStats() {
-  document.getElementById("streak").textContent = currentStreak;
-  document.getElementById("gems").textContent = gems;
+  const streakEl = document.getElementById("streak");
+  const gemsEl = document.getElementById("gems");
+  if (streakEl) streakEl.textContent = currentStreak;
+  if (gemsEl) gemsEl.textContent = gems;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -42,6 +51,7 @@ window.addEventListener("DOMContentLoaded", () => {
   updateStats();
 });
 
+// --- Série ---
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date();
@@ -52,7 +62,6 @@ function checkStreak() {
     if (lastPlayedDate === yesterdayStr) {
       // série continue
     } else if (lastPlayedDate !== today) {
-      // jour manqué → payer ou perdre
       if (gems >= 19) {
         gems -= 19;
         localStorage.setItem("gems", gems);
@@ -84,43 +93,38 @@ function endOfDay(score) {
   localStorage.setItem("streak", currentStreak);
   localStorage.setItem("gems", gems);
   localStorage.setItem("lastPlayedDate", lastPlayedDate);
-
   updateStats();
 }
 
 // Animation visuelle
 function animateBox(id) {
   const box = document.getElementById(id);
+  if (!box) return;
   box.classList.add("animate");
   setTimeout(() => box.classList.remove("animate"), 600);
 }
 
-function updateUI() {
-  document.getElementById("streak").textContent = `Série : ${currentStreak}`;
-  document.getElementById("gems").textContent = `Gemmes : ${gems}`;
+function openModal(el) {
+  if (el) el.hidden = false;
+}
+function closeModal(el) {
+  if (el) el.hidden = true;
 }
 
 // Paramètres
-function openModal(el) {
-  el.hidden = false;
-}
-function closeModal(el) {
-  el.hidden = true;
-}
-
-paramBtn.addEventListener("click", () => {
+paramBtn?.addEventListener("click", () => {
   paramBtn.classList.add("spin");
   setTimeout(() => {
     paramBtn.classList.remove("spin");
-    openModal(paramModal); // ouvre correctement
+    openModal(paramModal);
   }, 300);
 });
 
-saveTablesBtn.addEventListener("click", () => {
+saveTablesBtn?.addEventListener("click", () => {
   const checked = [...tablesForm.querySelectorAll("input[type=checkbox]:checked")]
     .map(cb => parseInt(cb.value, 10));
   selectedTables = checked.length ? checked : [1];
-  closeModal(paramModal); // ferme correctement
+  closeModal(paramModal);
   startGame();
 });
 
@@ -130,7 +134,6 @@ let a, b;
 let timeLeft = 40;
 let timerId;
 
-// NEW: enregistre chaque résultat (global)
 function recordCalcResult(a, b, success) {
   const key = `${a}x${b}`;
   if (!calcStats[key]) calcStats[key] = { success: 0, fail: 0 };
@@ -139,9 +142,8 @@ function recordCalcResult(a, b, success) {
   localStorage.setItem("calcStats", JSON.stringify(calcStats));
 }
 
-// NEW: sélectionne 50% des questions depuis calculs faibles (a ET b)
+// 50% de questions depuis calculs faibles exacts (a ET b)
 function pickQuestion() {
-  // Liste des calculs faibles (fail > success)
   const weakCalcs = Object.entries(calcStats)
     .filter(([_, data]) => (data.fail || 0) > (data.success || 0))
     .map(([key]) => key);
@@ -152,7 +154,6 @@ function pickQuestion() {
     const [wa, wb] = weakCalcs[Math.floor(Math.random() * weakCalcs.length)].split("x");
     a = parseInt(wa, 10);
     b = parseInt(wb, 10);
-    // Si la table 'a' n'est pas sélectionnée par l’utilisateur, on fallback
     if (!selectedTables.includes(a)) {
       a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
       b = Math.floor(Math.random() * 12) + 1;
@@ -200,9 +201,7 @@ function checkAnswer() {
     setTimeout(() => gameDiv.classList.remove("flash-red"), 1000);
   }
 
-  // NEW: enregistrer le résultat du calcul
   recordCalcResult(a, b, isCorrect);
-
   scoreEl.textContent = `Score: ${score}`;
   setTimeout(newQuestion, 500);
 }
@@ -239,14 +238,13 @@ function startTimer() {
   }, 1000);
 }
 
-// NEW: déclin des stats (pour ne pas rester indéfiniment)
+// Déclin léger des stats à chaque partie (mémoire récente)
 function decayCalcStats() {
   let changed = false;
   for (const key in calcStats) {
     const s = calcStats[key];
     if (s.success > 0) { s.success--; changed = true; }
     if (s.fail > 0) { s.fail--; changed = true; }
-    // Nettoyage si les deux tombent à 0
     if (s.success === 0 && s.fail === 0) {
       delete calcStats[key];
       changed = true;
@@ -262,9 +260,7 @@ function startGame() {
   submitBtn.disabled = false;
   answerEl.disabled = false;
 
-  // NEW: déclin léger au début de chaque partie
   decayCalcStats();
-
   newQuestion();
   startTimer();
 
@@ -273,82 +269,10 @@ function startGame() {
   bgMusic.play();
 }
 
+// --- Events ---
 submitBtn.addEventListener("click", checkAnswer);
-answerEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") checkAnswer();
-});
+answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") checkAnswer(); });
 retryBtn.addEventListener("click", startGame);
-
-// --- Stats IA UI ---
-if (statsBtn) {
-  statsBtn.addEventListener("click", () => {
-    // Récupère les stats
-    const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
-    statsContent.innerHTML = "";
-
-    const lines = [];
-    const entries = Object.entries(stats).sort((a, b) => {
-      const sa = a[1].fail - a[1].success;
-      const sb = b[1].fail - b[1].success;
-      return sb - sa;
-    });
-
-    for (const [calc, { success, fail }] of entries) {
-      const total = success + fail;
-      if (total > 0) {
-        const rate = Math.round((success / total) * 100);
-        let message;
-        if (rate < 50) {
-          message = `J'observe que ${calc} te pose problème (${fail} erreurs). On va le refaire plus souvent.`;
-        } else if (rate < 75) {
-          message = `Pas mal sur ${calc} (réussite ${rate}%). Encore un peu d’entraînement et ce sera parfait.`;
-        } else {
-          message = `Solide sur ${calc} (réussite ${rate}%). Tu peux le laisser respirer.`;
-        }
-        lines.push(message);
-      }
-    }
-
-    if (lines.length === 0) {
-      lines.push("Rien à signaler pour l’instant. Continue comme ça !");
-    }
-
-    // Effet chatbot: apparition en fondu
-    lines.forEach((line, i) => {
-      const div = document.createElement("div");
-      div.className = "stats-line";
-      div.style.animationDelay = `${i * 0.8}s`;
-      div.textContent = line;
-      statsContent.appendChild(div);
-    });
-
-    // Ouvre la modale
-    statsModal.hidden = false;
-
-    // Lance la vidéo du logo stats
-    statsBtn.hidden = true;
-    const statsVideo = document.getElementById("statsLogoVideo");
-    statsVideo.hidden = false;
-    statsVideo.play();
-  });
-}
-
-
-if (closeStatsBtn) {
-  closeStatsBtn.addEventListener("click", () => {
-    // Ferme la fenêtre stats
-    statsModal.hidden = true;
-
-    // Stoppe la vidéo du logo stats
-    const statsVideo = document.getElementById("statsLogoVideo");
-    statsVideo.pause();
-    statsVideo.currentTime = 0; // remet au début
-    statsVideo.hidden = true;
-
-    // Réaffiche le bouton image
-    statsBtn.hidden = false;
-  });
-}
 
 playBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
@@ -356,6 +280,68 @@ playBtn.addEventListener("click", () => {
   startGame();
 });
 
+// --- Stats IA UI ---
+statsBtn?.addEventListener("click", () => {
+  const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
+  statsContent.innerHTML = "";
 
+  const lines = [];
+  const entries = Object.entries(stats).sort((a, b) => {
+    const sa = (a[1].fail || 0) - (a[1].success || 0);
+    const sb = (b[1].fail || 0) - (b[1].success || 0);
+    return sb - sa;
+  });
 
+  for (const [calc, { success = 0, fail = 0 }] of entries) {
+    const total = success + fail;
+    if (total > 0) {
+      const rate = Math.round((success / total) * 100);
+      let message;
+      if (rate < 50) {
+        message = `🤖 J'observe que ${calc} te pose problème (${fail} erreurs). On va le refaire plus souvent.`;
+      } else if (rate < 75) {
+        message = `🤖 Pas mal sur ${calc} (réussite ${rate}%). Encore un peu d’entraînement et ce sera parfait.`;
+      } else {
+        message = `🤖 Solide sur ${calc} (réussite ${rate}%). Tu peux le laisser respirer.`;
+      }
+      lines.push(message);
+    }
+  }
 
+  if (lines.length === 0) {
+    lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
+  }
+
+  lines.forEach((line, i) => {
+    const div = document.createElement("div");
+    div.className = "stats-line";
+    div.style.animationDelay = `${i * 0.8}s`;
+    div.textContent = line;
+    statsContent.appendChild(div);
+  });
+
+  // Ouvre la modale
+  openModal(statsModal);
+
+  // Active la vidéo du logo stats si présente
+  if (statsLogoVideo) {
+    statsBtn.hidden = true;
+    statsLogoVideo.hidden = false;
+    statsLogoVideo.play().catch(() => {
+      // Si autoplay bloqué, on ignore
+    });
+  }
+});
+
+closeStatsBtn?.addEventListener("click", () => {
+  // Ferme la fenêtre stats
+  closeModal(statsModal);
+
+  // Stoppe la vidéo du logo stats et remet le bouton image
+  if (statsLogoVideo) {
+    statsLogoVideo.pause();
+    statsLogoVideo.currentTime = 0;
+    statsLogoVideo.hidden = true;
+    if (statsBtn) statsBtn.hidden = false;
+  }
+});
