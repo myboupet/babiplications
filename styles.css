@@ -244,6 +244,15 @@ button {
   50% { transform: scale(1.2); box-shadow: 0 0 20px #ff0; }
   100% { transform: scale(1); box-shadow: 0 0 10px #0ff; }
 }
+@keyframes fadeLine {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.stats-line {
+  opacity: 0;
+  animation: fadeLine 0.8s forwards;
+}
 
 
 @media (max-width: 480px) {
@@ -298,6 +307,7 @@ button {
     z-index: 2000;
   }
 }
+
 
 
 
