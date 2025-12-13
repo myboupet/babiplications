@@ -21,6 +21,16 @@ input, button {
   margin-right: 8px;
 }
 
+.stats-btn {
+  position: absolute;
+  top: 10px;
+  right: 60px; /* décalé de 60px par rapport au bord droit */
+  height: 40px;
+  cursor: pointer;
+  z-index: 2000;
+}
+
+
 /* Sur mobile : cases plus larges */
 @media (max-width: 480px) {
   .stats {
@@ -311,6 +321,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
