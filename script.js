@@ -101,21 +101,26 @@ function updateUI() {
 }
 
 // Paramètres
+function openModal(el) {
+  el.hidden = false;
+}
+function closeModal(el) {
+  el.hidden = true;
+}
+
 paramBtn.addEventListener("click", () => {
   paramBtn.classList.add("spin");
   setTimeout(() => {
     paramBtn.classList.remove("spin");
-    paramModal.style.display = "flex";
-  }, 1000);
+    openModal(paramModal); // ouvre correctement
+  }, 300);
 });
-
-let selectedTables = Array.from({ length: 12 }, (_, i) => i + 1);
 
 saveTablesBtn.addEventListener("click", () => {
   const checked = [...tablesForm.querySelectorAll("input[type=checkbox]:checked")]
-    .map(cb => parseInt(cb.value));
+    .map(cb => parseInt(cb.value, 10));
   selectedTables = checked.length ? checked : [1];
-  paramModal.style.display = "none";
+  closeModal(paramModal); // ferme correctement
   startGame();
 });
 
@@ -332,3 +337,4 @@ playBtn.addEventListener("click", () => {
   gameDiv.hidden = false;
   startGame();
 });
+
