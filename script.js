@@ -286,7 +286,6 @@ statsBtn?.addEventListener("click", () => {
   statsContent.innerHTML = "";
 
   const lines = [];
-  // On ne garde que les calculs qui ont déjà été faibles
   const entries = Object.entries(stats).filter(([_, data]) => data.fail > 0)
     .sort((a, b) => {
       const sa = a[1].fail - a[1].success;
@@ -312,7 +311,6 @@ statsBtn?.addEventListener("click", () => {
     lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
   }
 
-  // Effet chatbot: apparition en fondu
   lines.forEach((line, i) => {
     const div = document.createElement("div");
     div.className = "stats-line";
@@ -327,8 +325,7 @@ statsBtn?.addEventListener("click", () => {
   // Active la vidéo du logo stats si présente
   if (statsLogoVideo) {
     statsBtn.hidden = true;
-    statsLogoVideo.hidden = false;
-    statsLogoVideo.style.display = "block";
+    statsLogoVideo.hidden = false;   // <-- uniquement hidden
     statsLogoVideo.play().catch(() => {});
   }
 });
@@ -341,13 +338,14 @@ closeStatsBtn?.addEventListener("click", () => {
   if (statsLogoVideo) {
     statsLogoVideo.pause();
     statsLogoVideo.currentTime = 0;
-    statsLogoVideo.hidden = true;
-    statsLogoVideo.style.display = "none";
+    statsLogoVideo.hidden = true;    // <-- uniquement hidden
   }
 
   // Réaffiche le bouton image
   if (statsBtn) statsBtn.hidden = false;
 });
+
+
 
 
 
