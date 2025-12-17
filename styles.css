@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Baloo 2', cursive;
   background: radial-gradient(circle at center, #0f0f0f, #000);
   color: #fff;
   text-align: center;
@@ -331,6 +331,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
