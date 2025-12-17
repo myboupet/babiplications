@@ -10,10 +10,15 @@ body {
   align-items: center;
 }
     footer {
-      text-align: center;   / centrer le texte /
-      font-size: 12px;      / taille plus petite /
-      color: #555;          / couleur grise discrète /
-      margin-top: 50px;     / espace au-dessus /
+      position: fixed;       /* fixé à l'écran */
+      bottom: 0;             /* collé en bas */
+      width: 100%;           /* prend toute la largeur */
+      text-align: center;    /* centré */
+      font-size: 12px;       /* petit texte */
+      color: #555;           /* gris discret */
+      background-color: #f9f9f9; /* fond clair */
+      padding: 5px;          /* petit espace autour */
+      border-top: 1px solid #ddd; /* fine ligne au-dessus */
     }
 
 /* Sur mobile, boutons et inputs prennent toute la largeur */
@@ -327,6 +332,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
