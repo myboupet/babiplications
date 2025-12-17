@@ -18,7 +18,6 @@ body {
       color: #555;           /* gris discret */
       background-color: #FFFFFF00; /* fond clair */
       padding: 5px;          /* petit espace autour */
-      border-top: 1px solid #ddd; /* fine ligne au-dessus */
     }
 
 /* Sur mobile, boutons et inputs prennent toute la largeur */
@@ -332,6 +331,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
