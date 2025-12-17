@@ -16,7 +16,7 @@ body {
       text-align: center;    /* centré */
       font-size: 12px;       /* petit texte */
       color: #555;           /* gris discret */
-      background-color: #f9f9f9; /* fond clair */
+      background-color: #FFFFFF00; /* fond clair */
       padding: 5px;          /* petit espace autour */
       border-top: 1px solid #ddd; /* fine ligne au-dessus */
     }
@@ -332,6 +332,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
