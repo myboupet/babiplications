@@ -9,14 +9,12 @@ body {
   justify-content: center;
   align-items: center;
 }
-/* Pied de page */
-        footer {
-            font-size: 0.8em; /* Texte plus petit */
-            text-align: center;
-            padding: 10px;
-            background-color: #f0f0f0;
-            color: #555;
-        }
+    footer {
+      text-align: center;   / centrer le texte /
+      font-size: 12px;      / taille plus petite /
+      color: #555;          / couleur grise discrète /
+      margin-top: 50px;     / espace au-dessus /
+    }
 
 /* Sur mobile, boutons et inputs prennent toute la largeur */
 input, button {
@@ -329,6 +327,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
