@@ -27,7 +27,8 @@ const statsContent = document.getElementById("statsContent");
 const closeStatsBtn = document.getElementById("closeStats");
 
 // --- Vidéo du logo stats (optionnelle, protégée) ---
-const statsLogoVideo = document.getElementById("statsLogoVideo");
+const statsLogoAnim = document.getElementById("statsLogoAnim");
+
 
 let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
 let gems = parseInt(localStorage.getItem("gems")) || 0;
@@ -344,6 +345,7 @@ closeStatsBtn?.addEventListener("click", () => {
   // Réaffiche le bouton image
   if (statsBtn) statsBtn.hidden = false;
 });
+
 
 
 
