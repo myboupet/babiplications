@@ -324,11 +324,12 @@ statsBtn?.addEventListener("click", () => {
   openModal(statsModal);
 
   // Active la vidéo du logo stats si présente
-  if (statsLogoVideo) {
-    statsBtn.hidden = true;
-    statsLogoVideo.hidden = false;   // <-- uniquement hidden
-    statsLogoVideo.play().catch(() => {});
-  }
+ if (statsLogoAnim) {
+  statsBtn.hidden = true;
+  statsLogoAnim.hidden = false;
+  // Lottie autoplay déjà actif, rien à lancer
+}
+
 });
 
 closeStatsBtn?.addEventListener("click", () => {
@@ -336,15 +337,15 @@ closeStatsBtn?.addEventListener("click", () => {
   closeModal(statsModal);
 
   // Stoppe et cache la vidéo du logo stats
-  if (statsLogoVideo) {
-    statsLogoVideo.pause();
-    statsLogoVideo.currentTime = 0;
-    statsLogoVideo.hidden = true;    // <-- uniquement hidden
-  }
+  if (statsLogoAnim) {
+  statsLogoAnim.hidden = true;
+}
+
 
   // Réaffiche le bouton image
   if (statsBtn) statsBtn.hidden = false;
 });
+
 
 
 
