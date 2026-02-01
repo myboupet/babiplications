@@ -39,6 +39,17 @@ input, button {
   cursor: pointer;
   z-index: 2000;
 }
+#statsLogoAnim {
+  width: 40px;     /* même taille que ton bouton image */
+  height: 40px;
+  position: absolute;
+  top: 10px;
+  right: 60px;
+  cursor: pointer;
+  z-index: 2000;
+  display: block;
+}
+
 
 
 /* Sur mobile : cases plus larges */
@@ -331,6 +342,7 @@ button {
 [hidden] {
   display: none !important;
 }
+
 
 
 
