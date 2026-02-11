@@ -10,6 +10,9 @@ const feedbackEl = document.getElementById("feedback");
 const scoreEl = document.getElementById("score");
 const retryBtn = document.getElementById("retry");
 const progressEl = document.getElementById("progress");
+const comboEl = document.getElementById("combo");
+const livesEl = document.getElementById("lives");
+const missionEl = document.getElementById("mission");
 
 const bgMusic = document.getElementById("bgMusic");
 const correctSound = document.getElementById("correctSound");
@@ -29,9 +32,8 @@ const closeStatsBtn = document.getElementById("closeStats");
 // --- Vidéo du logo stats (optionnelle, protégée) ---
 const statsLogoAnim = document.getElementById("statsLogoAnim");
 
-
-let currentStreak = parseInt(localStorage.getItem("streak")) || 0;
-let gems = parseInt(localStorage.getItem("gems")) || 0;
+let currentStreak = parseInt(localStorage.getItem("streak"), 10) || 0;
+let gems = parseInt(localStorage.getItem("gems"), 10) || 0;
 let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
 
 // Calculs faibles (persistés)
@@ -50,6 +52,7 @@ function updateStats() {
 window.addEventListener("DOMContentLoaded", () => {
   checkStreak();
   updateStats();
+  updateComboAndLives();
 });
 
 // --- Série ---
@@ -123,7 +126,7 @@ paramBtn?.addEventListener("click", () => {
 
 saveTablesBtn?.addEventListener("click", () => {
   const checked = [...tablesForm.querySelectorAll("input[type=checkbox]:checked")]
-    .map(cb => parseInt(cb.value, 10));
+    .map((cb) => parseInt(cb.value, 10));
   selectedTables = checked.length ? checked : [1];
   closeModal(paramModal);
   startGame();
@@ -131,12 +134,54 @@ saveTablesBtn?.addEventListener("click", () => {
 
 // --- Jeu ---
 let score = 0;
-let a, b;
+let a;
+let b;
 let timeLeft = 40;
 let timerId;
+let combo = 0;
+let bestCombo = parseInt(localStorage.getItem("bestCombo"), 10) || 0;
+let lives = 3;
+let fastAnswerStreak = 0;
+let questionStartedAt = 0;
 
-function recordCalcResult(a, b, success) {
-  const key = `${a}x${b}`;
+const missions = [
+  { text: "🎯 Mission : 6 bonnes réponses d'affilée", target: 6, reward: 2, type: "combo" },
+  { text: "⚡ Mission : 4 réponses en moins de 3 secondes", target: 4, reward: 2, type: "speed" },
+  { text: "💎 Mission : Atteins 120 points", target: 120, reward: 3, type: "score" }
+];
+
+let currentMission = missions[0];
+
+function updateComboAndLives() {
+  if (comboEl) comboEl.textContent = `x${Math.max(1, combo)}`;
+  if (livesEl) livesEl.textContent = lives;
+}
+
+function pickMission() {
+  currentMission = missions[Math.floor(Math.random() * missions.length)];
+  if (missionEl) missionEl.textContent = currentMission.text;
+}
+
+function isMissionCompleted() {
+  if (!currentMission) return false;
+  if (currentMission.type === "combo") return combo >= currentMission.target;
+  if (currentMission.type === "speed") return fastAnswerStreak >= currentMission.target;
+  if (currentMission.type === "score") return score >= currentMission.target;
+  return false;
+}
+
+function rewardMission() {
+  gems += currentMission.reward;
+  localStorage.setItem("gems", gems);
+  updateStats();
+  animateBox("gemsBox");
+  feedbackEl.textContent = `Mission réussie ! +${currentMission.reward} gemmes 💎`;
+  feedbackEl.className = "feedback correct";
+  pickMission();
+}
+
+function recordCalcResult(x, y, success) {
+  const key = `${x}x${y}`;
   if (!calcStats[key]) calcStats[key] = { success: 0, fail: 0 };
   if (success) calcStats[key].success++;
   else calcStats[key].fail++;
@@ -169,18 +214,39 @@ function newQuestion() {
   pickQuestion();
   questionEl.textContent = `${a} × ${b} = ?`;
   answerEl.value = "";
+  questionStartedAt = Date.now();
 }
 
 let previousScore = 0;
+
+function stopRun(message) {
+  clearInterval(timerId);
+  feedbackEl.textContent = message;
+  feedbackEl.className = "feedback wrong";
+  submitBtn.disabled = true;
+  answerEl.disabled = true;
+  endOfDay(score);
+}
 
 function checkAnswer() {
   const val = parseInt(answerEl.value, 10);
   const isCorrect = val === a * b;
 
   if (isCorrect) {
+    const answerDuration = Date.now() - questionStartedAt;
+    fastAnswerStreak = answerDuration <= 3000 ? fastAnswerStreak + 1 : 0;
+    combo += 1;
+    bestCombo = Math.max(bestCombo, combo);
+    localStorage.setItem("bestCombo", String(bestCombo));
+    updateComboAndLives();
+
+    const comboMultiplier = Math.min(4, Math.max(1, combo));
+    const speedBonus = answerDuration <= 2000 ? 5 : 0;
+    const pointsEarned = 5 + (comboMultiplier * 2) + speedBonus;
+
     previousScore = score;
-    score += 10;
-    feedbackEl.textContent = "Bravo !";
+    score += pointsEarned;
+    feedbackEl.textContent = `Bravo ! +${pointsEarned} points`;
     feedbackEl.className = "feedback correct";
     correctSound.play();
 
@@ -194,17 +260,29 @@ function checkAnswer() {
     gameDiv.classList.add("flash-green");
     setTimeout(() => gameDiv.classList.remove("flash-green"), 1000);
   } else {
+    fastAnswerStreak = 0;
+    combo = 0;
+    lives = Math.max(0, lives - 1);
+    updateComboAndLives();
+
     score = Math.max(0, score - 5);
-    feedbackEl.textContent = `Raté… c'était ${a * b}`;
+    feedbackEl.textContent = `Raté… c'était ${a * b} (-5 points)`;
     feedbackEl.className = "feedback wrong";
     wrongSound.play();
     gameDiv.classList.add("flash-red");
     setTimeout(() => gameDiv.classList.remove("flash-red"), 1000);
+
+    if (lives <= 0) {
+      stopRun(`Partie terminée 💥 Score final : ${score} | Meilleur combo : x${bestCombo}`);
+      return;
+    }
   }
+
+  if (isMissionCompleted()) rewardMission();
 
   recordCalcResult(a, b, isCorrect);
   scoreEl.textContent = `Score: ${score}`;
-  setTimeout(newQuestion, 500);
+  setTimeout(newQuestion, 450);
 }
 
 function startTimer() {
@@ -229,12 +307,7 @@ function startTimer() {
     }
 
     if (timeLeft <= 0) {
-      clearInterval(timerId);
-      feedbackEl.textContent = "Temps écoulé ⏳";
-      feedbackEl.className = "feedback wrong";
-      submitBtn.disabled = true;
-      answerEl.disabled = true;
-      endOfDay(score);
+      stopRun(`Temps écoulé ⏳ Score final : ${score} | Meilleur combo : x${bestCombo}`);
     }
   }, 1000);
 }
@@ -244,8 +317,14 @@ function decayCalcStats() {
   let changed = false;
   for (const key in calcStats) {
     const s = calcStats[key];
-    if (s.success > 0) { s.success--; changed = true; }
-    if (s.fail > 0) { s.fail--; changed = true; }
+    if (s.success > 0) {
+      s.success--;
+      changed = true;
+    }
+    if (s.fail > 0) {
+      s.fail--;
+      changed = true;
+    }
     if (s.success === 0 && s.fail === 0) {
       delete calcStats[key];
       changed = true;
@@ -256,10 +335,17 @@ function decayCalcStats() {
 
 function startGame() {
   score = 0;
+  combo = 0;
+  lives = 3;
+  fastAnswerStreak = 0;
+
   scoreEl.textContent = `Score: ${score}`;
   feedbackEl.textContent = "";
   submitBtn.disabled = false;
   answerEl.disabled = false;
+
+  updateComboAndLives();
+  pickMission();
 
   decayCalcStats();
   newQuestion();
@@ -272,7 +358,9 @@ function startGame() {
 
 // --- Events ---
 submitBtn.addEventListener("click", checkAnswer);
-answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") checkAnswer(); });
+answerEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") checkAnswer();
+});
 retryBtn.addEventListener("click", startGame);
 
 playBtn.addEventListener("click", () => {
@@ -287,10 +375,11 @@ statsBtn?.addEventListener("click", () => {
   statsContent.innerHTML = "";
 
   const lines = [];
-  const entries = Object.entries(stats).filter(([_, data]) => data.fail > 0)
-    .sort((a, b) => {
-      const sa = a[1].fail - a[1].success;
-      const sb = b[1].fail - b[1].success;
+  const entries = Object.entries(stats)
+    .filter(([_, data]) => data.fail > 0)
+    .sort((a1, b1) => {
+      const sa = a1[1].fail - a1[1].success;
+      const sb = b1[1].fail - b1[1].success;
       return sb - sa;
     });
 
@@ -320,36 +409,20 @@ statsBtn?.addEventListener("click", () => {
     statsContent.appendChild(div);
   });
 
-  // Ouvre la modale
   openModal(statsModal);
 
-  // Active la vidéo du logo stats si présente
- if (statsLogoAnim) {
-  statsBtn.hidden = true;
-  statsLogoAnim.hidden = false;
-  // Lottie autoplay déjà actif, rien à lancer
-}
-
+  if (statsLogoAnim) {
+    statsBtn.hidden = true;
+    statsLogoAnim.hidden = false;
+  }
 });
 
 closeStatsBtn?.addEventListener("click", () => {
-  // Ferme la fenêtre stats
   closeModal(statsModal);
 
-  // Stoppe et cache la vidéo du logo stats
   if (statsLogoAnim) {
-  statsLogoAnim.hidden = true;
-}
+    statsLogoAnim.hidden = true;
+  }
 
-
-  // Réaffiche le bouton image
   if (statsBtn) statsBtn.hidden = false;
 });
-
-
-
-
-
-
-
-

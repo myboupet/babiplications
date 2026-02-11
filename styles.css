@@ -358,3 +358,34 @@ button {
 
 
 
+
+
+.stat-emoji {
+  font-size: 1.1rem;
+  margin-right: 6px;
+}
+
+.mission {
+  margin: 10px 0 14px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  border-radius: 10px;
+  background: rgba(0, 255, 255, 0.1);
+  font-size: 0.95rem;
+}
+
+.feedback {
+  min-height: 30px;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.feedback.correct {
+  color: #72ff87;
+  text-shadow: 0 0 12px rgba(114, 255, 135, 0.6);
+}
+
+.feedback.wrong {
+  color: #ff7373;
+  text-shadow: 0 0 12px rgba(255, 115, 115, 0.6);
+}
