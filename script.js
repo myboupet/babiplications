@@ -13,6 +13,10 @@ const progressEl = document.getElementById("progress");
 const comboEl = document.getElementById("combo");
 const livesEl = document.getElementById("lives");
 const missionEl = document.getElementById("mission");
+const levelEl = document.getElementById("level");
+const xpBarEl = document.getElementById("xpBar");
+const questsEl = document.getElementById("quests");
+const coachTipEl = document.getElementById("coachTip");
 
 const bgMusic = document.getElementById("bgMusic");
 const correctSound = document.getElementById("correctSound");
@@ -23,24 +27,50 @@ const paramModal = document.getElementById("paramModal");
 const saveTablesBtn = document.getElementById("saveTables");
 const tablesForm = document.getElementById("tablesForm");
 
-// --- Stats UI ---
 const statsBtn = document.getElementById("statsBtn");
 const statsModal = document.getElementById("statsModal");
 const statsContent = document.getElementById("statsContent");
 const closeStatsBtn = document.getElementById("closeStats");
-
-// --- Vidéo du logo stats (optionnelle, protégée) ---
 const statsLogoAnim = document.getElementById("statsLogoAnim");
 
 let currentStreak = parseInt(localStorage.getItem("streak"), 10) || 0;
 let gems = parseInt(localStorage.getItem("gems"), 10) || 0;
 let lastPlayedDate = localStorage.getItem("lastPlayedDate") || null;
-
-// Calculs faibles (persistés)
 let calcStats = JSON.parse(localStorage.getItem("calcStats")) || {};
-
-// Tables sélectionnées (doit exister AVANT pickQuestion)
 let selectedTables = Array.from({ length: 12 }, (_, i) => i + 1);
+
+let score = 0;
+let a;
+let b;
+let timeLeft = 40;
+let timerId;
+let combo = 0;
+let bestCombo = parseInt(localStorage.getItem("bestCombo"), 10) || 0;
+let lives = 3;
+let fastAnswerStreak = 0;
+let questionStartedAt = 0;
+let totalCorrect = parseInt(localStorage.getItem("totalCorrect"), 10) || 0;
+let totalWrong = parseInt(localStorage.getItem("totalWrong"), 10) || 0;
+let level = parseInt(localStorage.getItem("level"), 10) || 1;
+let xp = parseInt(localStorage.getItem("xp"), 10) || 0;
+let sessionWrong = 0;
+
+const todayKey = new Date().toISOString().split("T")[0];
+let questsState = JSON.parse(localStorage.getItem("dailyQuests")) || { date: "", quests: [] };
+
+const missions = [
+  { text: "🎯 Mission : 6 bonnes réponses d'affilée", target: 6, reward: 2, type: "combo" },
+  { text: "⚡ Mission : 4 réponses en moins de 3 secondes", target: 4, reward: 2, type: "speed" },
+  { text: "💎 Mission : Atteins 120 points", target: 120, reward: 3, type: "score" }
+];
+
+const questTemplates = [
+  { id: "precision", text: "🎯 5 bonnes réponses sans erreur", target: 5, reward: 3, type: "perfect" },
+  { id: "speed-run", text: "⚡ 8 réponses rapides (<3s)", target: 8, reward: 4, type: "speed" },
+  { id: "weak-focus", text: "🧠 Corrige 6 calculs faibles IA", target: 6, reward: 5, type: "weak" }
+];
+
+let currentMission = missions[0];
 
 function updateStats() {
   const streakEl = document.getElementById("streak");
@@ -49,13 +79,129 @@ function updateStats() {
   if (gemsEl) gemsEl.textContent = gems;
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  checkStreak();
-  updateStats();
-  updateComboAndLives();
-});
+function xpForNextLevel(currentLevel) {
+  return 60 + (currentLevel - 1) * 25;
+}
 
-// --- Série ---
+function saveProgress() {
+  localStorage.setItem("level", String(level));
+  localStorage.setItem("xp", String(xp));
+  localStorage.setItem("totalCorrect", String(totalCorrect));
+  localStorage.setItem("totalWrong", String(totalWrong));
+}
+
+function updateLevelUI() {
+  if (levelEl) levelEl.textContent = `Niv.${level}`;
+  if (!xpBarEl) return;
+  const maxXp = xpForNextLevel(level);
+  const percent = Math.max(0, Math.min(100, Math.round((xp / maxXp) * 100)));
+  xpBarEl.style.width = `${percent}%`;
+}
+
+function addXp(amount) {
+  xp += amount;
+  while (xp >= xpForNextLevel(level)) {
+    xp -= xpForNextLevel(level);
+    level += 1;
+    gems += 2;
+    animateBox("levelBox");
+    feedbackEl.textContent = `Level up ! Niveau ${level} ⭐ (+2 gemmes)`;
+    feedbackEl.className = "feedback correct";
+  }
+  saveProgress();
+  updateStats();
+  updateLevelUI();
+}
+
+function getWeakEntries() {
+  return Object.entries(calcStats)
+    .filter(([_, data]) => (data.fail || 0) > (data.success || 0))
+    .sort((a1, b1) => (b1[1].fail - b1[1].success) - (a1[1].fail - a1[1].success));
+}
+
+function getWeakTables() {
+  return getWeakEntries().slice(0, 3).map(([key]) => parseInt(key.split("x")[0], 10));
+}
+
+function buildCoachTip() {
+  const weakEntries = getWeakEntries();
+  const total = totalCorrect + totalWrong;
+  const accuracy = total ? Math.round((totalCorrect / total) * 100) : 100;
+
+  if (!weakEntries.length) {
+    return "🤖 AiBabi: excellent ! Passe en mode vitesse pour monter niveau + gemmes.";
+  }
+
+  const [worstCalc, worstData] = weakEntries[0];
+  const pressure = worstData.fail - worstData.success;
+  if (accuracy < 70 || pressure >= 3) {
+    return `🤖 Focus du jour: ${worstCalc}. Réponds lentement et vise 3 bonnes réponses d'affilée.`;
+  }
+
+  return `🤖 Tu progresses ! Défi IA: combo x${Math.min(8, 4 + level)} sur la table ${worstCalc.split("x")[0]}.`;
+}
+
+function updateCoachTip() {
+  if (coachTipEl) coachTipEl.textContent = buildCoachTip();
+}
+
+function initializeDailyQuests() {
+  if (questsState.date !== todayKey || !Array.isArray(questsState.quests) || !questsState.quests.length) {
+    questsState = {
+      date: todayKey,
+      quests: questTemplates.map((quest) => ({ ...quest, progress: 0, done: false }))
+    };
+    localStorage.setItem("dailyQuests", JSON.stringify(questsState));
+  }
+  renderQuests();
+}
+
+function renderQuests() {
+  if (!questsEl) return;
+  questsEl.innerHTML = "";
+
+  questsState.quests.forEach((quest) => {
+    const percent = Math.round((quest.progress / quest.target) * 100);
+    const item = document.createElement("div");
+    item.className = `quest-item ${quest.done ? "done" : ""}`;
+    item.innerHTML = `
+      <div class="quest-title">${quest.text} (+${quest.reward}💎)</div>
+      <div class="quest-track"><div class="quest-fill" style="width:${Math.min(percent, 100)}%"></div></div>
+      <div class="quest-progress">${quest.progress}/${quest.target}</div>
+    `;
+    questsEl.appendChild(item);
+  });
+}
+
+function updateQuestProgress(type, amount = 1) {
+  let completed = false;
+  questsState.quests.forEach((quest) => {
+    if (quest.done || quest.type !== type || amount <= 0) return;
+    quest.progress = Math.min(quest.target, quest.progress + amount);
+    if (quest.progress >= quest.target) {
+      quest.done = true;
+      gems += quest.reward;
+      addXp(10);
+      completed = true;
+    }
+  });
+
+  if (completed) {
+    animateBox("gemsBox");
+    feedbackEl.textContent = "Quête terminée ! Récompense ajoutée ✨";
+    feedbackEl.className = "feedback correct";
+  }
+
+  localStorage.setItem("dailyQuests", JSON.stringify(questsState));
+  updateStats();
+  renderQuests();
+}
+
+function updateComboAndLives() {
+  if (comboEl) comboEl.textContent = `x${Math.max(1, combo)}`;
+  if (livesEl) livesEl.textContent = lives;
+}
+
 function checkStreak() {
   const today = new Date().toISOString().split("T")[0];
   const yesterday = new Date();
@@ -63,12 +209,9 @@ function checkStreak() {
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
   if (lastPlayedDate) {
-    if (lastPlayedDate === yesterdayStr) {
-      // série continue
-    } else if (lastPlayedDate !== today) {
+    if (lastPlayedDate !== yesterdayStr && lastPlayedDate !== today) {
       if (gems >= 19) {
         gems -= 19;
-        localStorage.setItem("gems", gems);
       } else {
         currentStreak = 0;
       }
@@ -78,18 +221,15 @@ function checkStreak() {
   }
 
   localStorage.setItem("streak", currentStreak);
+  localStorage.setItem("gems", gems);
   updateStats();
 }
 
-function endOfDay(score) {
+function endOfDay(finalScore) {
   const today = new Date().toISOString().split("T")[0];
-
-  if (score >= 90) {
-    if (currentStreak === 0) {
-      currentStreak = 1;
-    } else if (lastPlayedDate !== today) {
-      currentStreak++;
-    }
+  if (finalScore >= 90) {
+    if (currentStreak === 0) currentStreak = 1;
+    else if (lastPlayedDate !== today) currentStreak++;
     animateBox("streakBox");
     lastPlayedDate = today;
   }
@@ -100,7 +240,6 @@ function endOfDay(score) {
   updateStats();
 }
 
-// Animation visuelle
 function animateBox(id) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -108,14 +247,9 @@ function animateBox(id) {
   setTimeout(() => box.classList.remove("animate"), 600);
 }
 
-function openModal(el) {
-  if (el) el.hidden = false;
-}
-function closeModal(el) {
-  if (el) el.hidden = true;
-}
+function openModal(el) { if (el) el.hidden = false; }
+function closeModal(el) { if (el) el.hidden = true; }
 
-// Paramètres
 paramBtn?.addEventListener("click", () => {
   paramBtn.classList.add("spin");
   setTimeout(() => {
@@ -132,38 +266,12 @@ saveTablesBtn?.addEventListener("click", () => {
   startGame();
 });
 
-// --- Jeu ---
-let score = 0;
-let a;
-let b;
-let timeLeft = 40;
-let timerId;
-let combo = 0;
-let bestCombo = parseInt(localStorage.getItem("bestCombo"), 10) || 0;
-let lives = 3;
-let fastAnswerStreak = 0;
-let questionStartedAt = 0;
-
-const missions = [
-  { text: "🎯 Mission : 6 bonnes réponses d'affilée", target: 6, reward: 2, type: "combo" },
-  { text: "⚡ Mission : 4 réponses en moins de 3 secondes", target: 4, reward: 2, type: "speed" },
-  { text: "💎 Mission : Atteins 120 points", target: 120, reward: 3, type: "score" }
-];
-
-let currentMission = missions[0];
-
-function updateComboAndLives() {
-  if (comboEl) comboEl.textContent = `x${Math.max(1, combo)}`;
-  if (livesEl) livesEl.textContent = lives;
-}
-
 function pickMission() {
   currentMission = missions[Math.floor(Math.random() * missions.length)];
   if (missionEl) missionEl.textContent = currentMission.text;
 }
 
 function isMissionCompleted() {
-  if (!currentMission) return false;
   if (currentMission.type === "combo") return combo >= currentMission.target;
   if (currentMission.type === "speed") return fastAnswerStreak >= currentMission.target;
   if (currentMission.type === "score") return score >= currentMission.target;
@@ -172,6 +280,7 @@ function isMissionCompleted() {
 
 function rewardMission() {
   gems += currentMission.reward;
+  addXp(8);
   localStorage.setItem("gems", gems);
   updateStats();
   animateBox("gemsBox");
@@ -188,13 +297,11 @@ function recordCalcResult(x, y, success) {
   localStorage.setItem("calcStats", JSON.stringify(calcStats));
 }
 
-// 50% de questions depuis calculs faibles exacts (a ET b)
 function pickQuestion() {
-  const weakCalcs = Object.entries(calcStats)
-    .filter(([_, data]) => (data.fail || 0) > (data.success || 0))
-    .map(([key]) => key);
-
-  const useWeak = weakCalcs.length > 0 && Math.random() < 0.5;
+  const weakCalcs = getWeakEntries().map(([key]) => key);
+  const weakTables = getWeakTables();
+  const useWeak = weakCalcs.length > 0 && Math.random() < 0.55;
+  const focusWeakTable = weakTables.length > 0 && Math.random() < 0.35;
 
   if (useWeak) {
     const [wa, wb] = weakCalcs[Math.floor(Math.random() * weakCalcs.length)].split("x");
@@ -205,7 +312,14 @@ function pickQuestion() {
       b = Math.floor(Math.random() * 12) + 1;
     }
   } else {
-    a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+    if (focusWeakTable) {
+      const targetTable = weakTables[Math.floor(Math.random() * weakTables.length)];
+      a = selectedTables.includes(targetTable)
+        ? targetTable
+        : selectedTables[Math.floor(Math.random() * selectedTables.length)];
+    } else {
+      a = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+    }
     b = Math.floor(Math.random() * 12) + 1;
   }
 }
@@ -234,7 +348,9 @@ function checkAnswer() {
 
   if (isCorrect) {
     const answerDuration = Date.now() - questionStartedAt;
-    fastAnswerStreak = answerDuration <= 3000 ? fastAnswerStreak + 1 : 0;
+    const answerWasFast = answerDuration <= 3000;
+
+    fastAnswerStreak = answerWasFast ? fastAnswerStreak + 1 : 0;
     combo += 1;
     bestCombo = Math.max(bestCombo, combo);
     localStorage.setItem("bestCombo", String(bestCombo));
@@ -242,20 +358,31 @@ function checkAnswer() {
 
     const comboMultiplier = Math.min(4, Math.max(1, combo));
     const speedBonus = answerDuration <= 2000 ? 5 : 0;
-    const pointsEarned = 5 + (comboMultiplier * 2) + speedBonus;
+    const pointsEarned = 5 + comboMultiplier * 2 + speedBonus;
 
     previousScore = score;
     score += pointsEarned;
+    totalCorrect += 1;
     feedbackEl.textContent = `Bravo ! +${pointsEarned} points`;
     feedbackEl.className = "feedback correct";
     correctSound.play();
 
+    addXp(3 + Math.floor(combo / 3));
+
     if (Math.floor(score / 50) > Math.floor(previousScore / 50)) {
       gems += 1;
+      addXp(6);
       animateBox("gemsBox");
       localStorage.setItem("gems", gems);
       updateStats();
     }
+
+    updateQuestProgress("speed", answerWasFast ? 1 : 0);
+    if (sessionWrong === 0) updateQuestProgress("perfect", 1);
+
+    const currentKey = `${a}x${b}`;
+    const currentData = calcStats[currentKey];
+    if (currentData && currentData.fail > currentData.success) updateQuestProgress("weak", 1);
 
     gameDiv.classList.add("flash-green");
     setTimeout(() => gameDiv.classList.remove("flash-green"), 1000);
@@ -266,6 +393,8 @@ function checkAnswer() {
     updateComboAndLives();
 
     score = Math.max(0, score - 5);
+    totalWrong += 1;
+    sessionWrong += 1;
     feedbackEl.textContent = `Raté… c'était ${a * b} (-5 points)`;
     feedbackEl.className = "feedback wrong";
     wrongSound.play();
@@ -273,6 +402,7 @@ function checkAnswer() {
     setTimeout(() => gameDiv.classList.remove("flash-red"), 1000);
 
     if (lives <= 0) {
+      saveProgress();
       stopRun(`Partie terminée 💥 Score final : ${score} | Meilleur combo : x${bestCombo}`);
       return;
     }
@@ -281,6 +411,8 @@ function checkAnswer() {
   if (isMissionCompleted()) rewardMission();
 
   recordCalcResult(a, b, isCorrect);
+  saveProgress();
+  updateCoachTip();
   scoreEl.textContent = `Score: ${score}`;
   setTimeout(newQuestion, 450);
 }
@@ -295,36 +427,25 @@ function startTimer() {
   timerId = setInterval(() => {
     timeLeft--;
     const percent = (timeLeft / 40) * 100;
-    progressEl.style.width = percent + "%";
+    progressEl.style.width = `${percent}%`;
 
-    if (timeLeft > 25) {
-      progressEl.style.background = "green";
-    } else if (timeLeft > 10) {
-      progressEl.style.background = "orange";
-    } else {
+    if (timeLeft > 25) progressEl.style.background = "green";
+    else if (timeLeft > 10) progressEl.style.background = "orange";
+    else {
       progressEl.style.background = "red";
       progressEl.classList.add("blink");
     }
 
-    if (timeLeft <= 0) {
-      stopRun(`Temps écoulé ⏳ Score final : ${score} | Meilleur combo : x${bestCombo}`);
-    }
+    if (timeLeft <= 0) stopRun(`Temps écoulé ⏳ Score final : ${score} | Meilleur combo : x${bestCombo}`);
   }, 1000);
 }
 
-// Déclin léger des stats à chaque partie (mémoire récente)
 function decayCalcStats() {
   let changed = false;
   for (const key in calcStats) {
     const s = calcStats[key];
-    if (s.success > 0) {
-      s.success--;
-      changed = true;
-    }
-    if (s.fail > 0) {
-      s.fail--;
-      changed = true;
-    }
+    if (s.success > 0) { s.success--; changed = true; }
+    if (s.fail > 0) { s.fail--; changed = true; }
     if (s.success === 0 && s.fail === 0) {
       delete calcStats[key];
       changed = true;
@@ -338,6 +459,7 @@ function startGame() {
   combo = 0;
   lives = 3;
   fastAnswerStreak = 0;
+  sessionWrong = 0;
 
   scoreEl.textContent = `Score: ${score}`;
   feedbackEl.textContent = "";
@@ -345,6 +467,9 @@ function startGame() {
   answerEl.disabled = false;
 
   updateComboAndLives();
+  updateLevelUI();
+  initializeDailyQuests();
+  updateCoachTip();
   pickMission();
 
   decayCalcStats();
@@ -356,7 +481,6 @@ function startGame() {
   bgMusic.play();
 }
 
-// --- Events ---
 submitBtn.addEventListener("click", checkAnswer);
 answerEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") checkAnswer();
@@ -369,7 +493,6 @@ playBtn.addEventListener("click", () => {
   startGame();
 });
 
-// --- Stats IA UI ---
 statsBtn?.addEventListener("click", () => {
   const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
   statsContent.innerHTML = "";
@@ -377,40 +500,32 @@ statsBtn?.addEventListener("click", () => {
   const lines = [];
   const entries = Object.entries(stats)
     .filter(([_, data]) => data.fail > 0)
-    .sort((a1, b1) => {
-      const sa = a1[1].fail - a1[1].success;
-      const sb = b1[1].fail - b1[1].success;
-      return sb - sa;
-    });
+    .sort((a1, b1) => (b1[1].fail - b1[1].success) - (a1[1].fail - a1[1].success));
 
-  for (const [calc, { success = 0, fail = 0 }] of entries) {
+  const levelProgress = `${xp}/${xpForNextLevel(level)} XP`;
+  lines.push(`⭐ Niveau ${level} — progression ${levelProgress}`);
+
+  for (const [calc, { success = 0, fail = 0 }] of entries.slice(0, 5)) {
     const total = success + fail;
-    if (total > 0) {
-      const rate = Math.round((success / total) * 100);
-      let message;
-      if (fail > success) {
-        message = `🤖 ${calc} te pose encore problème (${fail} erreurs). On va le revoir.`;
-      } else {
-        message = `🤖 Tu maîtrises mieux ${calc} maintenant (réussite ${rate}%).`;
-      }
-      lines.push(message);
+    const rate = Math.round((success / total) * 100);
+    if (fail > success) {
+      lines.push(`🤖 Priorité IA: ${calc} (${fail} erreurs). Réussite actuelle: ${rate}%.`);
+    } else {
+      lines.push(`🤖 Bon progrès sur ${calc}: réussite ${rate}%.`);
     }
   }
 
-  if (lines.length === 0) {
-    lines.push("🤖 Rien à signaler pour l’instant. Continue comme ça !");
-  }
+  if (entries.length === 0) lines.push("🤖 Rien à signaler. Tu peux activer des tables plus dures pour accélérer ta progression.");
 
   lines.forEach((line, i) => {
     const div = document.createElement("div");
     div.className = "stats-line";
-    div.style.animationDelay = `${i * 0.8}s`;
+    div.style.animationDelay = `${i * 0.35}s`;
     div.textContent = line;
     statsContent.appendChild(div);
   });
 
   openModal(statsModal);
-
   if (statsLogoAnim) {
     statsBtn.hidden = true;
     statsLogoAnim.hidden = false;
@@ -419,10 +534,15 @@ statsBtn?.addEventListener("click", () => {
 
 closeStatsBtn?.addEventListener("click", () => {
   closeModal(statsModal);
-
-  if (statsLogoAnim) {
-    statsLogoAnim.hidden = true;
-  }
-
+  if (statsLogoAnim) statsLogoAnim.hidden = true;
   if (statsBtn) statsBtn.hidden = false;
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  checkStreak();
+  updateStats();
+  updateComboAndLives();
+  updateLevelUI();
+  initializeDailyQuests();
+  updateCoachTip();
 });
