@@ -30,6 +30,7 @@ const tablesForm = document.getElementById("tablesForm");
 const statsBtn = document.getElementById("statsBtn");
 const statsModal = document.getElementById("statsModal");
 const statsContent = document.getElementById("statsContent");
+const statsQuestsEl = document.getElementById("statsQuests");
 const closeStatsBtn = document.getElementById("closeStats");
 const statsLogoAnim = document.getElementById("statsLogoAnim");
 
@@ -54,6 +55,11 @@ let totalWrong = parseInt(localStorage.getItem("totalWrong"), 10) || 0;
 let level = parseInt(localStorage.getItem("level"), 10) || 1;
 let xp = parseInt(localStorage.getItem("xp"), 10) || 0;
 let sessionWrong = 0;
+let sessionCorrect = 0;
+let sameTableStreak = 0;
+let lastCorrectTable = null;
+let recoveryStreak = 0;
+let justAfterError = false;
 
 const todayKey = new Date().toISOString().split("T")[0];
 let questsState = JSON.parse(localStorage.getItem("dailyQuests")) || { date: "", quests: [] };
@@ -67,7 +73,14 @@ const missions = [
 const questTemplates = [
   { id: "precision", text: "🎯 5 bonnes réponses sans erreur", target: 5, reward: 3, type: "perfect" },
   { id: "speed-run", text: "⚡ 8 réponses rapides (<3s)", target: 8, reward: 4, type: "speed" },
-  { id: "weak-focus", text: "🧠 Corrige 6 calculs faibles IA", target: 6, reward: 5, type: "weak" }
+  { id: "weak-focus", text: "🧠 Corrige 6 calculs faibles IA", target: 6, reward: 5, type: "weak" },
+  { id: "combo-master", text: "🔥 Atteins un combo x7", target: 1, reward: 4, type: "combo7" },
+  { id: "score-hero", text: "🏆 Atteins 140 points", target: 140, reward: 5, type: "score" },
+  { id: "survivor", text: "❤️ Termine avec au moins 2 vies", target: 1, reward: 4, type: "survivor" },
+  { id: "table-focus", text: "📘 Réussis 10 calculs de la même table", target: 10, reward: 4, type: "sameTable" },
+  { id: "marathon", text: "⏱️ Donne 12 bonnes réponses", target: 12, reward: 5, type: "correctTotal" },
+  { id: "sniper", text: "🎯 4 réponses parfaites d'affilée", target: 4, reward: 4, type: "combo4" },
+  { id: "recovery", text: "💪 Après une erreur, fais 5 bonnes réponses", target: 5, reward: 4, type: "recovery" }
 ];
 
 let currentMission = missions[0];
@@ -147,9 +160,11 @@ function updateCoachTip() {
 
 function initializeDailyQuests() {
   if (questsState.date !== todayKey || !Array.isArray(questsState.quests) || !questsState.quests.length) {
+    const shuffled = [...questTemplates].sort(() => Math.random() - 0.5);
+    const selectedDaily = shuffled.slice(0, 3);
     questsState = {
       date: todayKey,
-      quests: questTemplates.map((quest) => ({ ...quest, progress: 0, done: false }))
+      quests: selectedDaily.map((quest) => ({ ...quest, progress: 0, done: false }))
     };
     localStorage.setItem("dailyQuests", JSON.stringify(questsState));
   }
@@ -173,11 +188,73 @@ function renderQuests() {
   });
 }
 
+function renderQuestsInStats() {
+  if (!statsQuestsEl) return;
+  statsQuestsEl.innerHTML = "";
+
+  questsState.quests.forEach((quest, index) => {
+    const percent = Math.round((quest.progress / quest.target) * 100);
+    const item = document.createElement("div");
+    item.className = `stats-quest-item ${quest.done ? "done" : ""}`;
+    item.style.animationDelay = `${index * 0.25}s`;
+    item.innerHTML = `
+      <div class="stats-quest-title">${quest.text}</div>
+      <div class="stats-quest-track"><div class="stats-quest-fill" style="width:${Math.min(percent, 100)}%"></div></div>
+      <div class="stats-quest-meta">${quest.progress}/${quest.target} • +${quest.reward}💎</div>
+    `;
+    statsQuestsEl.appendChild(item);
+  });
+}
+
+function openStatsModal() {
+  const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
+  statsContent.innerHTML = "";
+
+  const lines = [];
+  const entries = Object.entries(stats)
+    .filter(([_, data]) => data.fail > 0)
+    .sort((a1, b1) => (b1[1].fail - b1[1].success) - (a1[1].fail - a1[1].success));
+
+  const levelProgress = `${xp}/${xpForNextLevel(level)} XP`;
+  lines.push(`⭐ Niveau ${level} — progression ${levelProgress}`);
+
+  for (const [calc, { success = 0, fail = 0 }] of entries.slice(0, 5)) {
+    const total = success + fail;
+    const rate = Math.round((success / total) * 100);
+    if (fail > success) {
+      lines.push(`🤖 Priorité IA: ${calc} (${fail} erreurs). Réussite actuelle: ${rate}%.`);
+    } else {
+      lines.push(`🤖 Bon progrès sur ${calc}: réussite ${rate}%.`);
+    }
+  }
+
+  if (entries.length === 0) lines.push("🤖 Rien à signaler. Tu peux activer des tables plus dures pour accélérer ta progression.");
+
+  lines.forEach((line, i) => {
+    const div = document.createElement("div");
+    div.className = "stats-line";
+    div.style.animationDelay = `${i * 0.35}s`;
+    div.textContent = line;
+    statsContent.appendChild(div);
+  });
+
+  renderQuestsInStats();
+  openModal(statsModal);
+  if (statsLogoAnim) {
+    statsBtn.hidden = true;
+    statsLogoAnim.hidden = false;
+  }
+}
+
 function updateQuestProgress(type, amount = 1) {
   let completed = false;
   questsState.quests.forEach((quest) => {
     if (quest.done || quest.type !== type || amount <= 0) return;
-    quest.progress = Math.min(quest.target, quest.progress + amount);
+    if (quest.type === "score") {
+      quest.progress = Math.min(quest.target, Math.max(quest.progress, amount));
+    } else {
+      quest.progress = Math.min(quest.target, quest.progress + amount);
+    }
     if (quest.progress >= quest.target) {
       quest.done = true;
       gems += quest.reward;
@@ -335,11 +412,14 @@ let previousScore = 0;
 
 function stopRun(message) {
   clearInterval(timerId);
+  updateQuestProgress("survivor", lives >= 2 ? 1 : 0);
+  updateQuestProgress("score", score);
   feedbackEl.textContent = message;
   feedbackEl.className = "feedback wrong";
   submitBtn.disabled = true;
   answerEl.disabled = true;
   endOfDay(score);
+  setTimeout(openStatsModal, 500);
 }
 
 function checkAnswer() {
@@ -363,6 +443,10 @@ function checkAnswer() {
     previousScore = score;
     score += pointsEarned;
     totalCorrect += 1;
+    sessionCorrect += 1;
+    sameTableStreak = lastCorrectTable === a ? sameTableStreak + 1 : 1;
+    lastCorrectTable = a;
+    recoveryStreak = justAfterError ? recoveryStreak + 1 : 0;
     feedbackEl.textContent = `Bravo ! +${pointsEarned} points`;
     feedbackEl.className = "feedback correct";
     correctSound.play();
@@ -379,6 +463,12 @@ function checkAnswer() {
 
     updateQuestProgress("speed", answerWasFast ? 1 : 0);
     if (sessionWrong === 0) updateQuestProgress("perfect", 1);
+    if (combo >= 7) updateQuestProgress("combo7", 1);
+    if (combo >= 4) updateQuestProgress("combo4", 1);
+    if (sameTableStreak >= 10) updateQuestProgress("sameTable", 1);
+    if (recoveryStreak >= 5) updateQuestProgress("recovery", 1);
+    updateQuestProgress("correctTotal", 1);
+    updateQuestProgress("score", score);
 
     const currentKey = `${a}x${b}`;
     const currentData = calcStats[currentKey];
@@ -395,6 +485,9 @@ function checkAnswer() {
     score = Math.max(0, score - 5);
     totalWrong += 1;
     sessionWrong += 1;
+    sameTableStreak = 0;
+    recoveryStreak = 0;
+    justAfterError = true;
     feedbackEl.textContent = `Raté… c'était ${a * b} (-5 points)`;
     feedbackEl.className = "feedback wrong";
     wrongSound.play();
@@ -406,6 +499,10 @@ function checkAnswer() {
       stopRun(`Partie terminée 💥 Score final : ${score} | Meilleur combo : x${bestCombo}`);
       return;
     }
+  }
+
+  if (isCorrect) {
+    justAfterError = sessionWrong > 0;
   }
 
   if (isMissionCompleted()) rewardMission();
@@ -460,6 +557,11 @@ function startGame() {
   lives = 3;
   fastAnswerStreak = 0;
   sessionWrong = 0;
+  sessionCorrect = 0;
+  sameTableStreak = 0;
+  lastCorrectTable = null;
+  recoveryStreak = 0;
+  justAfterError = false;
 
   scoreEl.textContent = `Score: ${score}`;
   feedbackEl.textContent = "";
@@ -493,44 +595,7 @@ playBtn.addEventListener("click", () => {
   startGame();
 });
 
-statsBtn?.addEventListener("click", () => {
-  const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
-  statsContent.innerHTML = "";
-
-  const lines = [];
-  const entries = Object.entries(stats)
-    .filter(([_, data]) => data.fail > 0)
-    .sort((a1, b1) => (b1[1].fail - b1[1].success) - (a1[1].fail - a1[1].success));
-
-  const levelProgress = `${xp}/${xpForNextLevel(level)} XP`;
-  lines.push(`⭐ Niveau ${level} — progression ${levelProgress}`);
-
-  for (const [calc, { success = 0, fail = 0 }] of entries.slice(0, 5)) {
-    const total = success + fail;
-    const rate = Math.round((success / total) * 100);
-    if (fail > success) {
-      lines.push(`🤖 Priorité IA: ${calc} (${fail} erreurs). Réussite actuelle: ${rate}%.`);
-    } else {
-      lines.push(`🤖 Bon progrès sur ${calc}: réussite ${rate}%.`);
-    }
-  }
-
-  if (entries.length === 0) lines.push("🤖 Rien à signaler. Tu peux activer des tables plus dures pour accélérer ta progression.");
-
-  lines.forEach((line, i) => {
-    const div = document.createElement("div");
-    div.className = "stats-line";
-    div.style.animationDelay = `${i * 0.35}s`;
-    div.textContent = line;
-    statsContent.appendChild(div);
-  });
-
-  openModal(statsModal);
-  if (statsLogoAnim) {
-    statsBtn.hidden = true;
-    statsLogoAnim.hidden = false;
-  }
-});
+statsBtn?.addEventListener("click", openStatsModal);
 
 closeStatsBtn?.addEventListener("click", () => {
   closeModal(statsModal);
