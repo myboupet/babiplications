@@ -60,6 +60,7 @@ let sameTableStreak = 0;
 let lastCorrectTable = null;
 let recoveryStreak = 0;
 let justAfterError = false;
+let isRunActive = false;
 
 const todayKey = new Date().toISOString().split("T")[0];
 let questsState = JSON.parse(localStorage.getItem("dailyQuests")) || { date: "", quests: [] };
@@ -206,6 +207,11 @@ function renderQuestsInStats() {
   });
 }
 
+function setQuestVisibility(visible) {
+  if (questsEl) questsEl.hidden = !visible;
+  if (statsQuestsEl) statsQuestsEl.hidden = !visible;
+}
+
 function openStatsModal() {
   const stats = JSON.parse(localStorage.getItem("calcStats")) || {};
   statsContent.innerHTML = "";
@@ -238,7 +244,16 @@ function openStatsModal() {
     statsContent.appendChild(div);
   });
 
-  renderQuestsInStats();
+  if (isRunActive) {
+    setQuestVisibility(false);
+    const runLine = document.createElement("div");
+    runLine.className = "stats-line";
+    runLine.textContent = "🎯 Les quêtes s'affichent uniquement à la fin de la partie.";
+    statsContent.prepend(runLine);
+  } else {
+    setQuestVisibility(true);
+    renderQuestsInStats();
+  }
   openModal(statsModal);
   if (statsLogoAnim) {
     statsBtn.hidden = true;
@@ -412,6 +427,8 @@ let previousScore = 0;
 
 function stopRun(message) {
   clearInterval(timerId);
+  isRunActive = false;
+  setQuestVisibility(true);
   updateQuestProgress("survivor", lives >= 2 ? 1 : 0);
   updateQuestProgress("score", score);
   feedbackEl.textContent = message;
@@ -562,6 +579,8 @@ function startGame() {
   lastCorrectTable = null;
   recoveryStreak = 0;
   justAfterError = false;
+  isRunActive = true;
+  setQuestVisibility(false);
 
   scoreEl.textContent = `Score: ${score}`;
   feedbackEl.textContent = "";
@@ -610,4 +629,5 @@ window.addEventListener("DOMContentLoaded", () => {
   updateLevelUI();
   initializeDailyQuests();
   updateCoachTip();
+  setQuestVisibility(false);
 });
